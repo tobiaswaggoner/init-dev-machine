@@ -55,17 +55,28 @@ Write-Host "  Import complete!" -ForegroundColor Green
 # Step 4: Create user and configure
 Write-Host "[4/6] Setting up user '$DefaultUser'..." -ForegroundColor Yellow
 
-# Run setup commands directly (avoids CRLF and redirection issues)
-wsl -d $DistroName -u root -- apt-get update -qq 2>$null
-wsl -d $DistroName -u root -- apt-get install -y -qq sudo 2>$null
-wsl -d $DistroName -u root -- useradd -m -s /bin/bash $DefaultUser 2>$null
+# Temporarily allow errors (apt warnings should not stop the script)
+$ErrorActionPreference = "Continue"
+
+# Fix old Debian repos if needed, then update
+wsl -d $DistroName -u root -- bash -c "sed -i '/bullseye-backports/d' /etc/apt/sources.list 2>/dev/null; apt-get update -qq 2>/dev/null"
+wsl -d $DistroName -u root -- bash -c "apt-get install -y -qq sudo 2>/dev/null"
+wsl -d $DistroName -u root -- bash -c "useradd -m -s /bin/bash $DefaultUser 2>/dev/null || true"
 wsl -d $DistroName -u root -- bash -c "echo '${DefaultUser}:test123' | chpasswd"
-wsl -d $DistroName -u root -- usermod -aG sudo $DefaultUser 2>$null
+wsl -d $DistroName -u root -- bash -c "usermod -aG sudo $DefaultUser 2>/dev/null || true"
 wsl -d $DistroName -u root -- bash -c "echo '$DefaultUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$DefaultUser"
 
 # Configure wsl.conf
-$wslConf = "[user]`ndefault=$DefaultUser`n`n[boot]`nsystemd=true"
-wsl -d $DistroName -u root -- bash -c "echo -e '$wslConf' > /etc/wsl.conf"
+wsl -d $DistroName -u root -- bash -c "cat > /etc/wsl.conf << 'EOF'
+[user]
+default=$DefaultUser
+
+[boot]
+systemd=true
+EOF"
+
+# Restore error handling
+$ErrorActionPreference = "Stop"
 
 Write-Host "  User '$DefaultUser' created (password: test123)" -ForegroundColor Green
 
