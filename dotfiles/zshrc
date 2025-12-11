@@ -108,15 +108,16 @@ alias ccyoloc="claude --dangerously-skip-permissions --continue"
 alias editrc="code ~/.zshrc"
 alias sourcerc="source ~/.zshrc"
 
-. "$HOME/.local/bin/env"
+# uv (Python) environment
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 
-# fnm
+# fnm (Node.js version manager)
 FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
   export PATH="$FNM_PATH:$PATH"
-  eval "`fnm env`"
+  eval "$(fnm env)" 2>/dev/null
+  eval "$(fnm env --use-on-cd)" 2>/dev/null
 fi
-eval "$(fnm env --use-on-cd)" 2>/dev/null
 
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
