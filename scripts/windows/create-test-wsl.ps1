@@ -87,14 +87,8 @@ Invoke-WslCommand "echo '${DefaultUser}:test123' | chpasswd"
 Invoke-WslCommand "usermod -aG sudo $DefaultUser"
 Invoke-WslCommand "echo '$DefaultUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$DefaultUser"
 
-# Configure wsl.conf
-Invoke-WslCommand "cat > /etc/wsl.conf << 'WSLCONF'
-[user]
-default=$DefaultUser
-
-[boot]
-systemd=true
-WSLCONF"
+# Configure wsl.conf (use printf to avoid heredoc issues through PowerShell)
+Invoke-WslCommand "printf '[user]\ndefault=$DefaultUser\n\n[boot]\nsystemd=true\n' > /etc/wsl.conf"
 
 Write-Host "  User '$DefaultUser' created (password: test123)" -ForegroundColor Green
 
