@@ -57,9 +57,23 @@ if grep -q "microsoft" /proc/version 2>/dev/null; then
         sudo tee /etc/wsl.conf > /dev/null << 'WSLCONF'
 [boot]
 systemd=true
+
+[interop]
+enabled=true
+appendWindowsPath=true
 WSLCONF
         echo "systemd enabled. Will take effect after WSL restart."
         echo "After bootstrap completes, run: wsl --shutdown (in PowerShell)"
+        echo ""
+    elif ! grep -q "\[interop\]" /etc/wsl.conf 2>/dev/null; then
+        echo "[0/13] Adding interop configuration to WSL..."
+        sudo tee -a /etc/wsl.conf > /dev/null << 'WSLCONF'
+
+[interop]
+enabled=true
+appendWindowsPath=true
+WSLCONF
+        echo "interop enabled. Will take effect after WSL restart."
         echo ""
     fi
 fi

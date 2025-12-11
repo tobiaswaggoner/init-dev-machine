@@ -88,7 +88,8 @@ Invoke-WslCommand "usermod -aG sudo $DefaultUser"
 Invoke-WslCommand "echo '$DefaultUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$DefaultUser"
 
 # Configure wsl.conf (use printf to avoid heredoc issues through PowerShell)
-Invoke-WslCommand "printf '[user]\ndefault=$DefaultUser\n\n[boot]\nsystemd=true\n' > /etc/wsl.conf"
+# Include [interop] section to ensure Windows executables (like VS Code) work with systemd
+Invoke-WslCommand "printf '[user]\ndefault=$DefaultUser\n\n[boot]\nsystemd=true\n\n[interop]\nenabled=true\nappendWindowsPath=true\n' > /etc/wsl.conf"
 
 Write-Host "  User '$DefaultUser' created (password: test123)" -ForegroundColor Green
 
