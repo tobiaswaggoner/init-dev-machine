@@ -14,14 +14,14 @@ Complete step-by-step guide to set up a development environment from a fresh Win
 │  PHASE 1: Windows (requires Admin)                         │
 │  └─> Install WSL2 + Debian                                 │
 ├─────────────────────────────────────────────────────────────┤
-│  PHASE 2: Pre-Bootstrap (manual, copy&paste)               │
+│  PHASE 2: Pre-Bootstrap (interactive script)               │
 │  └─> Install git, create SSH key, clone repo               │
 ├─────────────────────────────────────────────────────────────┤
 │  PHASE 3: Automated Bootstrap                              │
 │  └─> Run bootstrap.sh (installs everything else)           │
 ├─────────────────────────────────────────────────────────────┤
 │  PHASE 4: Post-Setup (manual)                              │
-│  └─> Configure identity, authenticate CLIs                 │
+│  └─> Authenticate CLIs, create cluster                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -81,66 +81,40 @@ wsl -l -v              # Should show: Debian ... VERSION 2
 
 ---
 
-# Phase 2: Pre-Bootstrap Setup
+# Phase 2: Pre-Bootstrap Setup (Interactive Script)
 
-These steps prepare your system to clone the infrastructure repo.
+This interactive script prepares your system to clone the infrastructure repo.
+**No manual editing required** - all values are prompted interactively.
 
-## Step 2.1: Install Minimal Prerequisites
+## Step 2.1: Run the Pre-Bootstrap Script
 
-Copy and paste this entire block into your Debian terminal:
+Copy and paste this single command into your Debian terminal:
 
 ```bash
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# STEP 2.1: Install git and basic tools
+# PHASE 2: Interactive Pre-Bootstrap Setup
+# This script will:
+#   1. Install git, curl, wget
+#   2. Ask for your name, email, GitHub username
+#   3. Generate SSH key
+#   4. Help you add key to GitHub
+#   5. Clone the infrastructure repo
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-sudo apt update && sudo apt install -y git curl wget ca-certificates
+curl -fsSL https://raw.githubusercontent.com/tobiaswaggoner/init-dev-machine/main/scripts/phase2-setup.sh | bash
 ```
 
-## Step 2.2: Generate SSH Key
+The script will:
+1. Install minimal prerequisites (git, curl, wget)
+2. Ask for your name, email, and GitHub username
+3. Generate an SSH key for GitHub
+4. Display the public key for you to add to GitHub
+5. Wait for you to add the key, then verify the connection
+6. Clone the infrastructure repository
 
-Copy and paste (replace email with yours):
-
+**Alternative**: If you prefer to run locally (after initial clone):
 ```bash
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# STEP 2.2: Generate SSH key for GitHub
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ssh-keygen -t ed25519 -C "your-email@example.com" -N "" -f ~/.ssh/id_ed25519
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Copy this PUBLIC KEY and add it to GitHub:"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-cat ~/.ssh/id_ed25519.pub
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-```
-
-## Step 2.3: Add SSH Key to GitHub
-
-1. Copy the public key output from above
-2. Go to: **https://github.com/settings/keys**
-3. Click **"New SSH key"**
-4. Title: `WSL Debian` (or any name)
-5. Paste the key
-6. Click **"Add SSH key"**
-
-### Verify GitHub Connection
-
-```bash
-ssh -T git@github.com
-# Should say: "Hi username! You've successfully authenticated..."
-```
-
-## Step 2.4: Clone the Infrastructure Repo
-
-```bash
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# STEP 2.4: Clone infrastructure repo
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-mkdir -p ~/src
-cd ~/src
-git clone git@github.com:tobiaswaggoner/init-dev-machine.git infrastructure
-cd infrastructure
+cd ~/src/infrastructure
+./scripts/phase2-setup.sh
 ```
 
 ---
@@ -173,13 +147,20 @@ This installs (13 steps, ~10-15 min):
 | 12 | Git configuration + aliases |
 | 13 | GitHub CLI (gh) + GitLab CLI (glab) |
 
-## Step 3.2: Apply Changes (Re-login)
+## Step 3.2: Restart WSL (for systemd)
 
-```bash
-exit
+The bootstrap script enables systemd in WSL. To apply this:
+
+**In PowerShell** (not Debian):
+```powershell
+wsl --shutdown
 ```
 
-Reopen Debian from Start menu, then verify:
+Then reopen Debian from Start menu.
+
+## Step 3.3: Verify Installation
+
+After reopening Debian, verify:
 
 ```bash
 echo $SHELL           # Should show /usr/bin/zsh
@@ -191,24 +172,27 @@ kubectl version --client  # Should show kubectl version
 
 # Phase 4: Post-Setup Configuration
 
-## Step 4.1: Start Docker
+## Step 4.1: Verify Docker (systemd)
 
-Docker needs to be started manually in WSL:
+With systemd enabled, Docker should auto-start. Verify:
 
 ```bash
-sudo service docker start
+docker ps   # Should work without errors
 ```
 
-**Optional**: Auto-start Docker on terminal open:
+If Docker is not running:
 ```bash
-echo 'sudo service docker start 2>/dev/null' >> ~/.zshrc
+sudo systemctl start docker
+sudo systemctl enable docker   # Enable auto-start
 ```
 
-## Step 4.2: Configure Git Identity
+## Step 4.2: Verify Git Identity
+
+Git identity was configured automatically from Phase 2. Verify:
 
 ```bash
-git config --global user.name "Your Full Name"
-git config --global user.email "your-email@example.com"
+git config --global user.name   # Should show your name
+git config --global user.email  # Should show your email
 ```
 
 ## Step 4.3: Authenticate Claude Code
@@ -252,47 +236,21 @@ make infra-status    # Check deployment status
 
 ---
 
-# Quick Setup Script (All of Phase 2)
+# Quick Setup (Experienced Users)
 
-For experienced users, here's Phase 2 as a single copy-paste block:
+Both Phase 2 and Phase 3 are now single-command copy-paste scripts:
 
+**Phase 2** (Pre-Bootstrap - fresh Debian):
 ```bash
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# COMPLETE PHASE 2: Pre-Bootstrap Setup
-# Run this after fresh Debian WSL installation
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-# Install prerequisites
-sudo apt update && sudo apt install -y git curl wget ca-certificates
-
-# Generate SSH key (press Enter for defaults, or customize)
-read -p "Enter your email for SSH key: " EMAIL
-ssh-keygen -t ed25519 -C "$EMAIL" -N "" -f ~/.ssh/id_ed25519
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
-
-# Display public key
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "ACTION REQUIRED: Add this key to GitHub"
-echo "→ https://github.com/settings/keys"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-cat ~/.ssh/id_ed25519.pub
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-read -p "Press Enter after adding key to GitHub..."
-
-# Test GitHub connection
-ssh -T git@github.com
-
-# Clone repo
-mkdir -p ~/src
-git clone git@github.com:tobiaswaggoner/init-dev-machine.git ~/src/infrastructure
-
-echo ""
-echo "✓ Phase 2 complete! Now run:"
-echo "  cd ~/src/infrastructure && ./scripts/bootstrap.sh"
+curl -fsSL https://raw.githubusercontent.com/tobiaswaggoner/init-dev-machine/main/scripts/phase2-setup.sh | bash
 ```
+
+**Phase 3** (Bootstrap - after Phase 2):
+```bash
+cd ~/src/infrastructure && ./scripts/bootstrap.sh
+```
+
+All configuration values are collected interactively - no manual editing required.
 
 ---
 
@@ -317,7 +275,7 @@ echo "  cd ~/src/infrastructure && ./scripts/bootstrap.sh"
 
 | Task | Command |
 |------|---------|
-| Start Docker | `sudo service docker start` |
+| Start Docker | `sudo systemctl start docker` |
 | Start cluster | `make cluster-up` |
 | Stop cluster | `make cluster-down` |
 | Reset cluster | `make cluster-reset` |
@@ -343,7 +301,7 @@ source ~/.zshrc
 
 ### Cluster won't start
 ```bash
-sudo service docker start
+sudo systemctl start docker
 make cluster-up
 ```
 

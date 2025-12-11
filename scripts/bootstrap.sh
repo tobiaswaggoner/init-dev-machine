@@ -26,6 +26,36 @@ if [ ! -f /etc/debian_version ]; then
 fi
 
 # =============================================================================
+# Load configuration from Phase 2
+# =============================================================================
+CONFIG_FILE="$HOME/.config/dev-setup/config"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+    echo "Loaded configuration for: $DEV_NAME <$DEV_EMAIL>"
+    echo ""
+else
+    echo "Warning: No configuration found at $CONFIG_FILE"
+    echo "Git identity will need to be configured manually."
+    echo ""
+fi
+
+# =============================================================================
+# Step 0: Enable systemd (WSL2)
+# =============================================================================
+if grep -q "microsoft" /proc/version 2>/dev/null; then
+    if ! grep -q "systemd=true" /etc/wsl.conf 2>/dev/null; then
+        echo "[0/13] Enabling systemd for WSL..."
+        sudo tee /etc/wsl.conf > /dev/null << 'WSLCONF'
+[boot]
+systemd=true
+WSLCONF
+        echo "systemd enabled. Will take effect after WSL restart."
+        echo "After bootstrap completes, run: wsl --shutdown (in PowerShell)"
+        echo ""
+    fi
+fi
+
+# =============================================================================
 # Step 1: Essential System Packages
 # =============================================================================
 echo "[1/13] Installing essential system packages..."
@@ -215,22 +245,27 @@ else
 fi
 
 # =============================================================================
-# Step 12: Git Configuration Check
+# Step 12: Git Configuration
 # =============================================================================
-echo "[12/13] Checking Git configuration..."
+echo "[12/13] Configuring Git..."
 
-# Git config will be set via dotfiles/gitconfig symlink
-# Just add delta support if available
+# Set Git identity from Phase 2 config
+if [ -n "$DEV_NAME" ] && [ -n "$DEV_EMAIL" ]; then
+    git config --global user.name "$DEV_NAME"
+    git config --global user.email "$DEV_EMAIL"
+    echo "Git identity set: $DEV_NAME <$DEV_EMAIL>"
+else
+    echo "NOTE: Git identity not set. Configure manually:"
+    echo "  git config --global user.name \"Your Name\""
+    echo "  git config --global user.email \"your-email@example.com\""
+fi
+
+# Delta diff viewer (optional, if installed)
 if command -v delta &> /dev/null; then
     git config --global core.pager delta
     git config --global interactive.diffFilter "delta --color-only"
     echo "Delta diff viewer configured"
 fi
-
-echo "Git aliases and settings will be applied via dotfiles"
-echo "NOTE: Remember to set your identity after setup:"
-echo "  git config --global user.name \"Your Name\""
-echo "  git config --global user.email \"your-email@example.com\""
 
 # =============================================================================
 # Step 13: GitHub CLI (gh) + GitLab CLI (glab)
