@@ -88,19 +88,118 @@ This interactive script prepares your system to clone the infrastructure repo.
 
 ## Step 2.1: Run the Pre-Bootstrap Script
 
-Copy and paste this single command into your Debian terminal:
+**Copy-paste the entire script below** into your Debian terminal:
 
 ```bash
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# PHASE 2: Interactive Pre-Bootstrap Setup
-# This script will:
-#   1. Install git, curl, wget
-#   2. Ask for your name, email, GitHub username
-#   3. Generate SSH key
-#   4. Help you add key to GitHub
-#   5. Clone the infrastructure repo
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-curl -fsSL https://raw.githubusercontent.com/tobiaswaggoner/init-dev-machine/main/scripts/phase2-setup.sh | bash
+#!/bin/bash
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PHASE 2: Pre-Bootstrap Setup
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+set -e
+
+CONFIG_DIR="$HOME/.config/dev-setup"
+CONFIG_FILE="$CONFIG_DIR/config"
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Phase 2: Pre-Bootstrap Setup"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Step 1: Install prerequisites
+echo "[1/5] Installing prerequisites..."
+sudo apt update && sudo apt install -y git curl wget ca-certificates
+echo ""
+
+# Step 2: Collect configuration
+echo "[2/5] Collecting your configuration..."
+echo ""
+
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Found existing configuration:"
+    cat "$CONFIG_FILE"
+    echo ""
+    read -p "Use existing config? [Y/n]: " USE_EXISTING
+    if [[ "$USE_EXISTING" =~ ^[Nn] ]]; then
+        rm "$CONFIG_FILE"
+    fi
+fi
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Please enter your details:"
+    echo ""
+    read -p "  Your full name (for Git): " DEV_NAME
+    read -p "  Your email (for Git & SSH key): " DEV_EMAIL
+    read -p "  GitHub username [tobiaswaggoner]: " GITHUB_USER
+    GITHUB_USER=${GITHUB_USER:-tobiaswaggoner}
+
+    mkdir -p "$CONFIG_DIR"
+    cat > "$CONFIG_FILE" << CONF
+DEV_NAME="$DEV_NAME"
+DEV_EMAIL="$DEV_EMAIL"
+GITHUB_USER="$GITHUB_USER"
+CONF
+    echo "Configuration saved to $CONFIG_FILE"
+fi
+
+source "$CONFIG_FILE"
+echo ""
+
+# Step 3: Generate SSH key
+echo "[3/5] Setting up SSH key..."
+
+if [ -f "$HOME/.ssh/id_ed25519" ]; then
+    echo "SSH key already exists at ~/.ssh/id_ed25519"
+else
+    ssh-keygen -t ed25519 -C "$DEV_EMAIL" -N "" -f "$HOME/.ssh/id_ed25519"
+    echo "SSH key generated"
+fi
+
+eval "$(ssh-agent -s)" > /dev/null
+ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ACTION REQUIRED: Add this SSH key to GitHub"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "1. Copy the key below"
+echo "2. Go to: https://github.com/settings/keys"
+echo "3. Click 'New SSH key', paste and save"
+echo ""
+echo "━━━━━━━━━━━━ YOUR PUBLIC KEY ━━━━━━━━━━━━"
+cat "$HOME/.ssh/id_ed25519.pub"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+read -p "Press Enter after adding the key to GitHub..."
+
+# Step 4: Test GitHub connection
+echo "[4/5] Testing GitHub connection..."
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" && echo "GitHub connection successful!" || ssh -T git@github.com || true
+echo ""
+
+# Step 5: Clone repository
+echo "[5/5] Cloning infrastructure repository..."
+
+REPO_URL="git@github.com:${GITHUB_USER}/init-dev-machine.git"
+REPO_DIR="$HOME/src/infrastructure"
+
+if [ -d "$REPO_DIR" ]; then
+    echo "Repository already exists at $REPO_DIR"
+    cd "$REPO_DIR" && git pull || true
+else
+    mkdir -p "$HOME/src"
+    git clone "$REPO_URL" "$REPO_DIR"
+    cd "$REPO_DIR"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Phase 2 Complete!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Next step:"
+echo "  cd ~/src/infrastructure && ./scripts/bootstrap.sh"
+echo ""
 ```
 
 The script will:
@@ -110,12 +209,6 @@ The script will:
 4. Display the public key for you to add to GitHub
 5. Wait for you to add the key, then verify the connection
 6. Clone the infrastructure repository
-
-**Alternative**: If you prefer to run locally (after initial clone):
-```bash
-cd ~/src/infrastructure
-./scripts/phase2-setup.sh
-```
 
 ---
 
