@@ -58,9 +58,18 @@ Write-Host "[4/6] Setting up user '$DefaultUser'..." -ForegroundColor Yellow
 # Helper function: run WSL command, check exit code (ignore stderr warnings)
 function Invoke-WslCommand {
     param([string]$Command)
+
+    # Temporarily ignore stderr (apt warnings etc.) but still check exit code
+    $prevErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+
     $output = wsl -d $DistroName -u root -- bash -c $Command 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  ERROR: Command failed with exit code $LASTEXITCODE" -ForegroundColor Red
+    $exitCode = $LASTEXITCODE
+
+    $ErrorActionPreference = $prevErrorAction
+
+    if ($exitCode -ne 0) {
+        Write-Host "  ERROR: Command failed with exit code $exitCode" -ForegroundColor Red
         Write-Host "  Command: $Command" -ForegroundColor Red
         Write-Host "  Output: $output" -ForegroundColor Red
         throw "WSL command failed"
