@@ -329,16 +329,15 @@ chmod 777 ~/k3d-vol/*-data
 echo ""
 echo "Configuring WSL settings..."
 
-# Find Windows user directory
+# Find Windows user directory (use cmd.exe to get actual current user)
+WIN_USER=""
 WIN_USER_DIR=""
-for dir in /mnt/c/Users/*/; do
-    dirname=$(basename "$dir")
-    # Skip system directories
-    if [[ "$dirname" != "Public" && "$dirname" != "Default" && "$dirname" != "Default User" && "$dirname" != "All Users" ]]; then
-        WIN_USER_DIR="$dir"
-        break
+if command -v cmd.exe &> /dev/null; then
+    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+    if [ -n "$WIN_USER" ] && [ -d "/mnt/c/Users/$WIN_USER" ]; then
+        WIN_USER_DIR="/mnt/c/Users/$WIN_USER/"
     fi
-done
+fi
 
 # Create .wslconfig if we found the Windows user dir and file doesn't exist
 if [ -n "$WIN_USER_DIR" ] && [ ! -f "${WIN_USER_DIR}.wslconfig" ]; then
