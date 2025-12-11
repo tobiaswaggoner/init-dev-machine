@@ -1,0 +1,37 @@
+# Bitnami MongoDB Helm Chart Values
+# https://github.com/bitnami/charts/tree/main/bitnami/mongodb
+
+architecture: standalone
+
+auth:
+  enabled: true
+  rootUser: root
+  rootPassword: rootpassword
+  databases:
+    - dev
+  usernames:
+    - dev
+  passwords:
+    - devpassword
+
+persistence:
+  enabled: true
+  size: 8Gi
+
+# Resource limits for local development
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 500m
+
+service:
+  type: ClusterIP
+  ports:
+    mongodb: 27017
+
+# Disable metrics for local dev
+metrics:
+  enabled: false

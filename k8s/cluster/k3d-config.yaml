@@ -1,0 +1,44 @@
+# k3d cluster configuration
+# Usage: k3d cluster create --config k3d-config.yaml
+# Docs: https://k3d.io/v5.7.5/usage/configfile/
+
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: my-dev
+
+servers: 1
+agents: 1
+
+# Expose LoadBalancer on port 8080
+ports:
+  - port: 8080:80
+    nodeFilters:
+      - loadbalancer
+
+# Mount host volumes for persistent data
+volumes:
+  - volume: ${HOME}/k3d-vol/postgres-data:/mnt/data/postgres
+    nodeFilters:
+      - server:0
+  - volume: ${HOME}/k3d-vol/mongodb-data:/mnt/data/mongodb
+    nodeFilters:
+      - server:0
+  - volume: ${HOME}/k3d-vol/redis-data:/mnt/data/redis
+    nodeFilters:
+      - server:0
+
+# k3s configuration
+options:
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+
+# Registry configuration (optional, for local image caching)
+# registries:
+#   create:
+#     name: k3d-registry.localhost
+#     host: "0.0.0.0"
+#     hostPort: "5000"

@@ -1,0 +1,37 @@
+# Bitnami PostgreSQL Helm Chart Values
+# https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+
+auth:
+  postgresPassword: postgres
+  database: dev
+
+primary:
+  persistence:
+    enabled: true
+    # Use host path for persistent data that survives cluster resets
+    existingClaim: ""
+    storageClass: ""
+    size: 8Gi
+
+  # Resource limits for local development
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+  # Node port for direct access (optional)
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+
+# Disable read replicas for local dev
+readReplicas:
+  replicaCount: 0
+
+# Metrics (optional)
+metrics:
+  enabled: false

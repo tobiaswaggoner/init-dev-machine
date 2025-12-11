@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Helm
+k8s/helm/*/charts/
+k8s/helm/**/Chart.lock
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# Secrets (if any)
+secrets/
+*.secret
+*.secret.*

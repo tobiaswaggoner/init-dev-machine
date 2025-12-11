@@ -1,0 +1,17 @@
+# Strimzi Kafka Operator Helm Chart Values
+# https://github.com/strimzi/strimzi-kafka-operator/tree/main/helm-charts/helm3/strimzi-kafka-operator
+
+# Watch all namespaces (not just kafka)
+watchAnyNamespace: true
+
+# Resource limits for the operator
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 384Mi
+    cpu: 500m
+
+# Log level
+logLevel: INFO

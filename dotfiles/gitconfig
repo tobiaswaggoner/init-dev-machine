@@ -1,0 +1,5 @@
+[user]
+	name = Tobias Waggoner
+	email = tobias.waggoner.ext@ane.internal
+[core]
+	autocrlf = input

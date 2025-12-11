@@ -1,0 +1,302 @@
+#!/bin/bash
+# Bootstrap script for fresh WSL Debian installation
+# Installs all required development tools from scratch
+#
+# Usage: curl -fsSL <raw-url> | bash
+#    or: ./bootstrap.sh
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
+
+echo "=========================================="
+echo "ANE Energy - WSL Development Setup"
+echo "=========================================="
+echo "Starting from fresh Debian installation"
+echo ""
+
+# Check if running on Debian/Ubuntu
+if [ ! -f /etc/debian_version ]; then
+    echo "Error: This script is designed for Debian-based systems"
+    exit 1
+fi
+
+# =============================================================================
+# Step 1: Essential System Packages
+# =============================================================================
+echo "[1/12] Installing essential system packages..."
+sudo apt update
+sudo apt install -y \
+    curl \
+    wget \
+    git \
+    unzip \
+    zip \
+    tar \
+    gzip \
+    build-essential \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    apt-transport-https \
+    software-properties-common
+
+# =============================================================================
+# Step 2: Useful CLI Tools
+# =============================================================================
+echo "[2/12] Installing CLI utilities..."
+sudo apt install -y \
+    htop \
+    tree \
+    jq \
+    vim \
+    nano \
+    less \
+    man-db \
+    rsync \
+    openssh-client \
+    iputils-ping \
+    dnsutils \
+    netcat-openbsd \
+    procps \
+    file
+
+# =============================================================================
+# Step 3: ZSH
+# =============================================================================
+echo "[3/12] Installing ZSH..."
+if ! command -v zsh &> /dev/null; then
+    sudo apt install -y zsh
+    # Set ZSH as default shell
+    sudo chsh -s $(which zsh) $USER
+    echo "ZSH installed and set as default shell"
+else
+    echo "ZSH already installed, skipping"
+fi
+
+# =============================================================================
+# Step 4: Oh My Zsh
+# =============================================================================
+echo "[4/12] Installing Oh My Zsh..."
+if [ ! -d ~/.oh-my-zsh ]; then
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+else
+    echo "Oh My Zsh already installed, skipping"
+fi
+
+# =============================================================================
+# Step 5: Docker
+# =============================================================================
+echo "[5/12] Installing Docker..."
+if ! command -v docker &> /dev/null; then
+    # Remove old versions if any
+    sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+
+    # Add Docker's official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Add the repository to Apt sources
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # Add current user to docker group
+    sudo usermod -aG docker $USER
+
+    # Start Docker service
+    sudo service docker start || true
+
+    echo "Docker installed. NOTE: Log out and back in for docker group to take effect"
+else
+    echo "Docker already installed, skipping"
+    # Ensure docker is running
+    sudo service docker start 2>/dev/null || true
+fi
+
+# =============================================================================
+# Step 6: kubectl
+# =============================================================================
+echo "[6/12] Installing kubectl..."
+if ! command -v kubectl &> /dev/null; then
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+else
+    echo "kubectl already installed, skipping"
+fi
+
+# =============================================================================
+# Step 7: k3d
+# =============================================================================
+echo "[7/12] Installing k3d..."
+if ! command -v k3d &> /dev/null; then
+    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+else
+    echo "k3d already installed, skipping"
+fi
+
+# =============================================================================
+# Step 8: Helm + k9s
+# =============================================================================
+echo "[8/12] Installing Helm and k9s..."
+
+# Ensure ~/.local/bin exists and is in PATH
+mkdir -p ~/.local/bin
+
+if ! command -v helm &> /dev/null; then
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | \
+        HELM_INSTALL_DIR=~/.local/bin USE_SUDO=false bash
+
+    # Add Helm repos
+    ~/.local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
+    ~/.local/bin/helm repo add strimzi https://strimzi.io/charts/
+    ~/.local/bin/helm repo update
+else
+    echo "Helm already installed, skipping"
+fi
+
+if ! command -v k9s &> /dev/null; then
+    K9S_VERSION=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | grep tag_name | cut -d '"' -f 4)
+    curl -sLO "https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_amd64.tar.gz"
+    tar xzf k9s_Linux_amd64.tar.gz k9s
+    mv k9s ~/.local/bin/
+    rm k9s_Linux_amd64.tar.gz
+else
+    echo "k9s already installed, skipping"
+fi
+
+# =============================================================================
+# Step 9: Python (uv)
+# =============================================================================
+echo "[9/12] Installing Python tools (uv)..."
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+else
+    echo "uv already installed, skipping"
+fi
+
+# =============================================================================
+# Step 10: Node.js (fnm + bun)
+# =============================================================================
+echo "[10/12] Installing Node.js tools (fnm, bun)..."
+if ! command -v fnm &> /dev/null; then
+    curl -fsSL https://fnm.vercel.app/install | bash
+else
+    echo "fnm already installed, skipping"
+fi
+
+if ! command -v bun &> /dev/null; then
+    curl -fsSL https://bun.sh/install | bash
+else
+    echo "bun already installed, skipping"
+fi
+
+# =============================================================================
+# Step 11: Claude Code CLI
+# =============================================================================
+echo "[11/12] Installing Claude Code..."
+if ! command -v claude &> /dev/null; then
+    # Native installation via official installer
+    curl -fsSL https://claude.ai/install.sh | bash
+    echo "Claude Code installed"
+    echo "NOTE: Run 'claude' and authenticate with your Anthropic account"
+else
+    echo "Claude Code already installed, skipping"
+fi
+
+# =============================================================================
+# Step 12: Git Configuration
+# =============================================================================
+echo "[12/12] Configuring Git..."
+
+# Git credential helper for HTTPS (stores credentials securely)
+git config --global credential.helper store
+
+# Useful Git aliases
+git config --global alias.st status
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.lg "log --oneline --graph --decorate"
+git config --global alias.last "log -1 HEAD"
+git config --global alias.unstage "reset HEAD --"
+
+# Better defaults
+git config --global init.defaultBranch main
+git config --global pull.rebase false
+git config --global push.autoSetupRemote true
+
+# Delta diff viewer (optional, if installed)
+if command -v delta &> /dev/null; then
+    git config --global core.pager delta
+    git config --global interactive.diffFilter "delta --color-only"
+fi
+
+echo "Git configured with aliases and credential helper"
+
+# =============================================================================
+# Dotfiles
+# =============================================================================
+echo ""
+echo "Installing dotfiles..."
+if [ -f "$REPO_DIR/dotfiles/install.sh" ]; then
+    "$REPO_DIR/dotfiles/install.sh"
+else
+    echo "Dotfiles not found, skipping (run from infrastructure repo)"
+fi
+
+# =============================================================================
+# Volume directories
+# =============================================================================
+echo ""
+echo "Creating volume directories..."
+mkdir -p ~/k3d-vol/postgres-data
+mkdir -p ~/k3d-vol/mongodb-data
+mkdir -p ~/k3d-vol/redis-data
+chmod 777 ~/k3d-vol/*-data
+
+# =============================================================================
+# WSL-specific configuration
+# =============================================================================
+echo ""
+echo "Configuring WSL settings..."
+
+# Create .wslconfig hint if not exists
+if [ ! -f /mnt/c/Users/$USER/.wslconfig ] 2>/dev/null; then
+    echo "TIP: Consider creating C:\\Users\\$USER\\.wslconfig with:"
+    echo "  [wsl2]"
+    echo "  memory=8GB"
+    echo "  processors=4"
+fi
+
+# =============================================================================
+# Done
+# =============================================================================
+echo ""
+echo "=========================================="
+echo "Setup complete!"
+echo "=========================================="
+echo ""
+echo "Installed:"
+echo "  - System tools (curl, wget, git, jq, htop, ...)"
+echo "  - ZSH + Oh My Zsh"
+echo "  - Docker + Docker Compose"
+echo "  - kubectl, k3d, Helm, k9s"
+echo "  - uv (Python), fnm + bun (Node.js)"
+echo "  - Claude Code CLI (+ ccstatusline config)"
+echo "  - Git aliases and credential helper"
+echo ""
+echo "Next steps:"
+echo "  1. Log out and back in (for docker group + zsh)"
+echo "  2. source ~/.zshrc"
+if [ -d "$REPO_DIR" ]; then
+echo "  3. cd $REPO_DIR && make cluster-up"
+echo "  4. make infra-up"
+fi
+echo ""

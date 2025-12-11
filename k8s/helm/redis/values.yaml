@@ -1,0 +1,32 @@
+# Bitnami Redis Helm Chart Values
+# https://github.com/bitnami/charts/tree/main/bitnami/redis
+
+architecture: standalone
+
+auth:
+  enabled: false
+
+master:
+  persistence:
+    enabled: false  # Redis as cache, no persistence needed
+
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 200m
+
+  service:
+    type: ClusterIP
+    ports:
+      redis: 6379
+
+# Disable replicas for local dev
+replica:
+  replicaCount: 0
+
+# Disable metrics for local dev
+metrics:
+  enabled: false
