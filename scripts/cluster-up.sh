@@ -104,8 +104,9 @@ if check_port $DEFAULT_PORT; then
 
     if [[ "$response" =~ ^[Yy]$ ]]; then
         # Create temporary config with different port
+        # Format in config is "8080:80" where 8080 is host port
         TEMP_CONFIG=$(mktemp)
-        sed "s/:$DEFAULT_PORT:/:$ALT_PORT:/g" "$CONFIG_FILE" > "$TEMP_CONFIG"
+        sed "s/$DEFAULT_PORT:80/$ALT_PORT:80/g" "$CONFIG_FILE" > "$TEMP_CONFIG"
 
         echo "Creating cluster '$CLUSTER_NAME' on port $ALT_PORT..."
         k3d cluster create --config "$TEMP_CONFIG"
