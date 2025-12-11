@@ -31,36 +31,52 @@ Complete step-by-step guide to set up a development environment from a fresh Win
 
 ## Step 1.1: Install WSL2 with Debian
 
-Open **PowerShell as Administrator** and run:
+Open **PowerShell as Administrator** and copy-paste:
 
 ```powershell
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 1.1: Install WSL2 with Debian (requires Admin)
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 wsl --install -d Debian
 ```
 
 **Restart your computer** when prompted.
 
-After restart, Debian will launch automatically:
-1. Wait for installation to complete
-2. Create your UNIX username (e.g., your first name lowercase)
-3. Create a password (can be simple, you'll use it for `sudo`)
+### Troubleshooting: If the above doesn't work
+
+Copy-paste this in PowerShell (Admin):
+
+```powershell
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ALTERNATIVE: Manual WSL2 installation
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "RESTART YOUR COMPUTER NOW" -ForegroundColor Yellow
+Write-Host "Then run: wsl --set-default-version 2" -ForegroundColor Yellow
+Write-Host "Then run: wsl --install -d Debian" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+```
+
+## Step 1.2: First Debian Launch
+
+After restart, Debian launches automatically (or search "Debian" in Start menu):
+
+1. Wait for "Installing, this may take a few minutes..."
+2. **Create UNIX username**: Use your first name lowercase (e.g., `tobias`)
+3. **Create password**: Can be simple, you'll use it for `sudo`
 
 ### Verify Installation
 
+In the Debian terminal:
 ```bash
 cat /etc/os-release    # Should show Debian
-wsl.exe -l -v          # Should show VERSION 2
 ```
 
-### Troubleshooting WSL Installation
-
-If `wsl --install` doesn't work, run these commands in PowerShell (Admin):
-
+In PowerShell:
 ```powershell
-dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-# Restart, then:
-wsl --set-default-version 2
-wsl --install -d Debian
+wsl -l -v              # Should show: Debian ... VERSION 2
 ```
 
 ---
