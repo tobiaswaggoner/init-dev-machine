@@ -55,28 +55,37 @@ Write-Host "  Import complete!" -ForegroundColor Green
 # Step 4: Create user and configure
 Write-Host "[4/6] Setting up user '$DefaultUser'..." -ForegroundColor Yellow
 
-# Temporarily allow errors (apt warnings should not stop the script)
-$ErrorActionPreference = "Continue"
+# Helper function: run WSL command, check exit code (ignore stderr warnings)
+function Invoke-WslCommand {
+    param([string]$Command)
+    $output = wsl -d $DistroName -u root -- bash -c $Command 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  ERROR: Command failed with exit code $LASTEXITCODE" -ForegroundColor Red
+        Write-Host "  Command: $Command" -ForegroundColor Red
+        Write-Host "  Output: $output" -ForegroundColor Red
+        throw "WSL command failed"
+    }
+}
 
-# Fix old Debian repos if needed, then update
-wsl -d $DistroName -u root -- bash -c "sed -i '/bullseye-backports/d' /etc/apt/sources.list 2>/dev/null; apt-get update -qq 2>/dev/null"
-wsl -d $DistroName -u root -- bash -c "apt-get install -y -qq sudo 2>/dev/null"
-wsl -d $DistroName -u root -- bash -c "useradd -m -s /bin/bash $DefaultUser 2>/dev/null || true"
-wsl -d $DistroName -u root -- bash -c "echo '${DefaultUser}:test123' | chpasswd"
-wsl -d $DistroName -u root -- bash -c "usermod -aG sudo $DefaultUser 2>/dev/null || true"
-wsl -d $DistroName -u root -- bash -c "echo '$DefaultUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$DefaultUser"
+# Fix old Debian repos, update, install sudo
+Invoke-WslCommand "sed -i '/bullseye-backports/d' /etc/apt/sources.list 2>/dev/null || true"
+Invoke-WslCommand "apt-get update -qq"
+Invoke-WslCommand "apt-get install -y -qq sudo"
+
+# Create user (may already exist, that's ok)
+Invoke-WslCommand "id $DefaultUser >/dev/null 2>&1 || useradd -m -s /bin/bash $DefaultUser"
+Invoke-WslCommand "echo '${DefaultUser}:test123' | chpasswd"
+Invoke-WslCommand "usermod -aG sudo $DefaultUser"
+Invoke-WslCommand "echo '$DefaultUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$DefaultUser"
 
 # Configure wsl.conf
-wsl -d $DistroName -u root -- bash -c "cat > /etc/wsl.conf << 'EOF'
+Invoke-WslCommand "cat > /etc/wsl.conf << 'WSLCONF'
 [user]
 default=$DefaultUser
 
 [boot]
 systemd=true
-EOF"
-
-# Restore error handling
-$ErrorActionPreference = "Stop"
+WSLCONF"
 
 Write-Host "  User '$DefaultUser' created (password: test123)" -ForegroundColor Green
 
