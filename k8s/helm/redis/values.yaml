@@ -1,10 +1,8 @@
 # Bitnami Redis Helm Chart Values
 # https://github.com/bitnami/charts/tree/main/bitnami/redis
 
-# Pin image version for reproducibility
-# Note: tag is Redis version, not Helm chart version
-image:
-  tag: "7.4"
+# Using chart default image version (Bitnami maintains compatibility)
+# To pin: check https://hub.docker.com/r/bitnami/redis/tags for valid tags
 
 architecture: standalone
 

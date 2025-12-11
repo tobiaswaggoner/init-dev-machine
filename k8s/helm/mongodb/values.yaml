@@ -1,10 +1,8 @@
 # Bitnami MongoDB Helm Chart Values
 # https://github.com/bitnami/charts/tree/main/bitnami/mongodb
 
-# Pin image version for reproducibility
-# Note: tag is MongoDB version, not Helm chart version
-image:
-  tag: "8"
+# Using chart default image version (Bitnami maintains compatibility)
+# To pin: check https://hub.docker.com/r/bitnami/mongodb/tags for valid tags
 
 architecture: standalone
 

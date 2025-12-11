@@ -108,5 +108,5 @@ These survive cluster resets.
 6. **Bootstrap script** installs everything from fresh Debian - 13 steps total
 7. **Claude Code** is pre-configured with ccstatusline in `~/.claude/settings.json`
 8. **Git credentials** stored via `git credential.helper store` in `~/.git-credentials`
-9. **Image versions pinned** - PostgreSQL 17, MongoDB 8, Redis 7.4, Strimzi 0.49.1
+9. **Image versions** - Using Bitnami chart defaults (auto-updated), Strimzi 0.49.1 pinned
 10. **Port conflict handling** - `make cluster-up` automatically finds free port if 8080 is occupied
