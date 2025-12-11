@@ -255,20 +255,9 @@ else
 fi
 
 # =============================================================================
-# Step 12: Git Configuration
+# Step 12: Git Configuration (aliases only - identity set after dotfiles)
 # =============================================================================
 echo "[12/13] Configuring Git..."
-
-# Set Git identity from Phase 2 config
-if [ -n "$DEV_NAME" ] && [ -n "$DEV_EMAIL" ]; then
-    git config --global user.name "$DEV_NAME"
-    git config --global user.email "$DEV_EMAIL"
-    echo "Git identity set: $DEV_NAME <$DEV_EMAIL>"
-else
-    echo "NOTE: Git identity not set. Configure manually:"
-    echo "  git config --global user.name \"Your Name\""
-    echo "  git config --global user.email \"your-email@example.com\""
-fi
 
 # Delta diff viewer (optional, if installed)
 if command -v delta &> /dev/null; then
@@ -320,6 +309,17 @@ if [ -f "$REPO_DIR/dotfiles/install.sh" ]; then
     "$REPO_DIR/dotfiles/install.sh"
 else
     echo "Dotfiles not found, skipping (run from infrastructure repo)"
+fi
+
+# Set Git identity AFTER dotfiles (dotfiles overwrites gitconfig)
+if [ -n "$DEV_NAME" ] && [ -n "$DEV_EMAIL" ]; then
+    git config --global user.name "$DEV_NAME"
+    git config --global user.email "$DEV_EMAIL"
+    echo "Git identity set: $DEV_NAME <$DEV_EMAIL>"
+else
+    echo "NOTE: Git identity not set. Configure manually:"
+    echo "  git config --global user.name \"Your Name\""
+    echo "  git config --global user.email \"your-email@example.com\""
 fi
 
 # =============================================================================

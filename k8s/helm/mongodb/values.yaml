@@ -1,6 +1,10 @@
 # Bitnami MongoDB Helm Chart Values
 # https://github.com/bitnami/charts/tree/main/bitnami/mongodb
 
+# Pin image version for reproducibility
+image:
+  tag: "8.2.2"
+
 architecture: standalone
 
 auth:

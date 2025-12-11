@@ -1,6 +1,10 @@
 # Bitnami Redis Helm Chart Values
 # https://github.com/bitnami/charts/tree/main/bitnami/redis
 
+# Pin image version for reproducibility
+image:
+  tag: "8.4.0"
+
 architecture: standalone
 
 auth:

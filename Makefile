@@ -116,6 +116,7 @@ strimzi-up:
 	@$(KUBECTL) create namespace kafka --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	$(HELM) upgrade --install strimzi strimzi/strimzi-kafka-operator \
 		--namespace kafka \
+		--version 0.49.1 \
 		--values k8s/helm/strimzi/operator/values.yaml \
 		--wait
 

@@ -1,6 +1,10 @@
 # Bitnami PostgreSQL Helm Chart Values
 # https://github.com/bitnami/charts/tree/main/bitnami/postgresql
 
+# Pin image version for reproducibility
+image:
+  tag: "18.1.0"
+
 auth:
   postgresPassword: postgres
   database: dev
