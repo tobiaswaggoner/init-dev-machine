@@ -46,15 +46,8 @@ setup-volumes:
 	@chmod 777 $(HOME)/k3d-vol/*-data
 	@echo "Volume directories created"
 
-cluster-up: setup-volumes
-	@if $(K3D) cluster list | grep -q $(CLUSTER_NAME); then \
-		echo "Cluster $(CLUSTER_NAME) already exists, starting..."; \
-		$(K3D) cluster start $(CLUSTER_NAME); \
-	else \
-		echo "Creating cluster $(CLUSTER_NAME)..."; \
-		$(K3D) cluster create --config k8s/cluster/k3d-config.yaml; \
-	fi
-	@$(KUBECTL) cluster-info
+cluster-up:
+	@./scripts/cluster-up.sh
 
 cluster-down:
 	$(K3D) cluster stop $(CLUSTER_NAME)
