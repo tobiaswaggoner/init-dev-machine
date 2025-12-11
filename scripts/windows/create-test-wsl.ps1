@@ -152,10 +152,10 @@ if (Test-Path $terminalSettingsPath) {
     Write-Host "  Windows Terminal not found - manual profile setup needed" -ForegroundColor Yellow
 }
 
-# Step 6: Restart WSL to apply systemd
-Write-Host "[6/6] Restarting WSL to enable systemd..." -ForegroundColor Yellow
-wsl --shutdown
-Write-Host "  WSL shutdown complete. Systemd will be active on next start." -ForegroundColor Green
+# Step 6: Terminate test instance to apply systemd (keeps other WSL instances running)
+Write-Host "[6/6] Restarting test instance to enable systemd..." -ForegroundColor Yellow
+wsl --terminate $DistroName
+Write-Host "  Instance terminated. Systemd will be active on next start." -ForegroundColor Green
 
 # Done
 Write-Host ""
