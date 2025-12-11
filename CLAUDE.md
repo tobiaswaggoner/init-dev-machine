@@ -48,16 +48,21 @@ infrastructure/
 │   └── install.sh           # Dotfiles installer
 ├── scripts/
 │   ├── bootstrap.sh         # Full WSL setup (13 steps)
-│   └── install-helm.sh      # Helm-only installation
+│   ├── cluster-up.sh        # Smart cluster creation (port conflict detection)
+│   ├── install-helm.sh      # Helm-only installation
+│   └── windows/             # PowerShell scripts for WSL management
+│       ├── create-test-wsl.ps1
+│       └── remove-test-wsl.ps1
 ├── volumes/
 │   └── README.md            # Volume documentation
 └── docs/
-    └── GITLAB-SETUP.md      # Git/GitLab configuration
+    ├── GITLAB-SETUP.md      # Git/GitLab configuration
+    └── SETUP-NEW-MACHINE.md # Complete setup guide
 ```
 
 ## Cluster Details
 - **Cluster name**: `my-dev`
-- **LoadBalancer**: Port 8080 mapped to host
+- **LoadBalancer**: Port 8080 mapped to host (auto-selects next free port if occupied)
 - **Persistent volumes**: Mounted from `~/k3d-vol/{service}-data/`
 
 ## Common Commands
@@ -103,3 +108,5 @@ These survive cluster resets.
 6. **Bootstrap script** installs everything from fresh Debian - 13 steps total
 7. **Claude Code** is pre-configured with ccstatusline in `~/.claude/settings.json`
 8. **Git credentials** stored via `git credential.helper store` in `~/.git-credentials`
+9. **Image versions pinned** - PostgreSQL 18.1.0, MongoDB 8.2.2, Redis 8.4.0, Strimzi 0.49.1
+10. **Port conflict handling** - `make cluster-up` automatically finds free port if 8080 is occupied

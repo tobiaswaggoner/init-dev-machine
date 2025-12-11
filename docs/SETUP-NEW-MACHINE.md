@@ -331,17 +331,14 @@ make infra-status    # Check deployment status
 
 # Quick Setup (Experienced Users)
 
-Both Phase 2 and Phase 3 are now single-command copy-paste scripts:
-
-**Phase 2** (Pre-Bootstrap - fresh Debian):
-```bash
-curl -fsSL https://raw.githubusercontent.com/tobiaswaggoner/init-dev-machine/main/scripts/phase2-setup.sh | bash
-```
+**Phase 2**: Copy-paste the script from Step 2.1 above (repo is private, curl won't work without auth)
 
 **Phase 3** (Bootstrap - after Phase 2):
 ```bash
 cd ~/src/infrastructure && ./scripts/bootstrap.sh
 ```
+
+**After Bootstrap**: Restart terminal or run `source ~/.zshrc`
 
 All configuration values are collected interactively - no manual editing required.
 
@@ -369,7 +366,7 @@ All configuration values are collected interactively - no manual editing require
 | Task | Command |
 |------|---------|
 | Start Docker | `sudo systemctl start docker` |
-| Start cluster | `make cluster-up` |
+| Start cluster | `make cluster-up` (auto-detects port conflicts) |
 | Stop cluster | `make cluster-down` |
 | Reset cluster | `make cluster-reset` |
 | Deploy services | `make infra-up` |
@@ -395,6 +392,16 @@ source ~/.zshrc
 ### Cluster won't start
 ```bash
 sudo systemctl start docker
+make cluster-up
+```
+
+### Port 8080 already in use
+The `make cluster-up` command automatically detects port conflicts and finds an available port:
+```bash
+# If port 8080 is in use, the script will:
+# 1. Find the next available port (e.g., 8081)
+# 2. Create cluster with that port
+# 3. Show you which port was used
 make cluster-up
 ```
 
