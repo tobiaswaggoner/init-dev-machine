@@ -28,3 +28,6 @@
     lg = log --oneline --graph --decorate
     last = log -1 HEAD
     unstage = reset HEAD --
+[user]
+	name = Tobias Waggoner
+	email = tobias.waggoner.ext@ane.energy
