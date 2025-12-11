@@ -287,12 +287,17 @@ fi
 
 # GitLab CLI (glab)
 if ! command -v glab &> /dev/null; then
-    GLAB_VERSION=$(curl -s https://api.github.com/repos/gitlab-org/cli/releases/latest | grep tag_name | cut -d '"' -f 4 | sed 's/v//')
-    curl -sLO "https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_Linux_x86_64.tar.gz"
-    tar xzf "glab_${GLAB_VERSION}_Linux_x86_64.tar.gz"
-    sudo install -o root -g root -m 0755 bin/glab /usr/local/bin/glab
-    rm -rf "glab_${GLAB_VERSION}_Linux_x86_64.tar.gz" bin/
-    echo "GitLab CLI installed. Run 'glab auth login' to authenticate."
+    # Get version from GitLab API (not GitHub)
+    GLAB_VERSION=$(curl -s "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases" | grep -o '"tag_name":"v[^"]*"' | head -1 | cut -d'"' -f4 | sed 's/v//')
+    if [ -n "$GLAB_VERSION" ]; then
+        curl -sLO "https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_linux_amd64.tar.gz"
+        tar xzf "glab_${GLAB_VERSION}_linux_amd64.tar.gz"
+        sudo install -o root -g root -m 0755 bin/glab /usr/local/bin/glab
+        rm -rf "glab_${GLAB_VERSION}_linux_amd64.tar.gz" bin/
+        echo "GitLab CLI installed. Run 'glab auth login' to authenticate."
+    else
+        echo "Warning: Could not determine glab version, skipping installation"
+    fi
 else
     echo "GitLab CLI already installed, skipping"
 fi
