@@ -103,6 +103,8 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# Claude Code CLI
+export PATH="$HOME/.claude/local/bin:$PATH"
 alias ccyolo="claude --dangerously-skip-permissions"
 alias ccyoloc="claude --dangerously-skip-permissions --continue"
 alias editrc="code ~/.zshrc"

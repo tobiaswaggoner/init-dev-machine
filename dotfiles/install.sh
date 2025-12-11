@@ -1,18 +1,18 @@
 #!/bin/bash
-# Install dotfiles by creating symlinks
+# Install dotfiles by copying (not symlinks - tools modify these files)
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Installing dotfiles from $SCRIPT_DIR"
 
-# Backup and symlink .zshrc
-if [ -f ~/.zshrc ] && [ ! -L ~/.zshrc ]; then
+# Copy .zshrc (not symlink - uv, fnm, bun modify this file during install)
+if [ -f ~/.zshrc ] && [ ! -f ~/.zshrc.backup ]; then
     echo "Backing up existing .zshrc to .zshrc.backup"
-    mv ~/.zshrc ~/.zshrc.backup
+    cp ~/.zshrc ~/.zshrc.backup
 fi
-ln -sf "$SCRIPT_DIR/zshrc" ~/.zshrc
-echo "Linked ~/.zshrc -> $SCRIPT_DIR/zshrc"
+cp "$SCRIPT_DIR/zshrc" ~/.zshrc
+echo "Copied ~/.zshrc from $SCRIPT_DIR/zshrc"
 
 # Backup and symlink .gitconfig
 if [ -f ~/.gitconfig ] && [ ! -L ~/.gitconfig ]; then

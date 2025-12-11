@@ -30,8 +30,17 @@ fi
 # =============================================================================
 CONFIG_FILE="$HOME/.config/dev-setup/config"
 if [ -f "$CONFIG_FILE" ]; then
+    # Export variables so they're available in subshells
+    set -a
     source "$CONFIG_FILE"
-    echo "Loaded configuration for: $DEV_NAME <$DEV_EMAIL>"
+    set +a
+    if [ -n "$DEV_NAME" ] && [ -n "$DEV_EMAIL" ]; then
+        echo "Loaded configuration for: $DEV_NAME <$DEV_EMAIL>"
+    else
+        echo "Warning: Config file exists but DEV_NAME/DEV_EMAIL not set"
+        echo "Config contents:"
+        cat "$CONFIG_FILE"
+    fi
     echo ""
 else
     echo "Warning: No configuration found at $CONFIG_FILE"
