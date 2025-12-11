@@ -1,7 +1,7 @@
 # Infrastructure Repo - LLM Context
 
 ## Overview
-This repository manages local development infrastructure for ANE Energy consulting work. It provides:
+This repository manages local development infrastructure. It provides:
 - Local Kubernetes cluster (k3d) configuration
 - Infrastructure services (PostgreSQL, MongoDB, Redis, Kafka)
 - WSL development environment setup (dotfiles, tools, Claude Code)
@@ -16,6 +16,8 @@ This repository manages local development infrastructure for ANE Energy consulti
 | Tool | Purpose | Location |
 |------|---------|----------|
 | claude | Claude Code CLI | `~/.claude/local/bin/claude` |
+| gh | GitHub CLI | `/usr/bin/gh` |
+| glab | GitLab CLI | `/usr/local/bin/glab` |
 | k3d | Local k8s cluster | `/usr/local/bin/k3d` |
 | kubectl | Kubernetes CLI | `/usr/local/bin/kubectl` |
 | helm | Package manager for k8s | `~/.local/bin/helm` |
@@ -45,7 +47,7 @@ infrastructure/
 │   │   └── settings.json    # ccstatusline config
 │   └── install.sh           # Dotfiles installer
 ├── scripts/
-│   ├── bootstrap.sh         # Full WSL setup (12 steps)
+│   ├── bootstrap.sh         # Full WSL setup (13 steps)
 │   └── install-helm.sh      # Helm-only installation
 ├── volumes/
 │   └── README.md            # Volume documentation
@@ -98,6 +100,6 @@ These survive cluster resets.
 3. **Bitnami charts** used for PostgreSQL, MongoDB, Redis - check values.yaml
 4. **Strimzi** for Kafka - uses Custom Resources, not plain Helm values
 5. **No external ingress** - local development only, use port-forward or LoadBalancer
-6. **Bootstrap script** installs everything from fresh Debian - 12 steps total
+6. **Bootstrap script** installs everything from fresh Debian - 13 steps total
 7. **Claude Code** is pre-configured with ccstatusline in `~/.claude/settings.json`
 8. **Git credentials** stored via `git credential.helper store` in `~/.git-credentials`

@@ -1,4 +1,4 @@
-# ANE Energy - Local Infrastructure
+# Local Development Infrastructure
 
 Local development infrastructure for WSL2/k3d environment.
 
@@ -31,7 +31,7 @@ The `bootstrap.sh` script sets up a complete dev environment from a fresh Debian
 | Python | uv |
 | Node.js | fnm, bun |
 | AI | Claude Code CLI (+ ccstatusline) |
-| Git | Aliases, credential helper |
+| Git | Aliases, credential helper, gh + glab CLI |
 
 ## Services
 
@@ -125,6 +125,7 @@ The ccstatusline is pre-configured in `~/.claude/settings.json`.
 
 ## Documentation
 
+- [New Machine Setup](docs/SETUP-NEW-MACHINE.md) - Complete setup from fresh Windows 11
 - [GitLab Setup](docs/GITLAB-SETUP.md) - Token creation, SSH keys
 - [Volumes](volumes/README.md) - Persistent storage details
 - [CLAUDE.md](CLAUDE.md) - LLM context for this repo

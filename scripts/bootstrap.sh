@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "=========================================="
-echo "ANE Energy - WSL Development Setup"
+echo "WSL Development Environment Setup"
 echo "=========================================="
 echo "Starting from fresh Debian installation"
 echo ""
@@ -24,7 +24,7 @@ fi
 # =============================================================================
 # Step 1: Essential System Packages
 # =============================================================================
-echo "[1/12] Installing essential system packages..."
+echo "[1/13] Installing essential system packages..."
 sudo apt update
 sudo apt install -y \
     curl \
@@ -44,7 +44,7 @@ sudo apt install -y \
 # =============================================================================
 # Step 2: Useful CLI Tools
 # =============================================================================
-echo "[2/12] Installing CLI utilities..."
+echo "[2/13] Installing CLI utilities..."
 sudo apt install -y \
     htop \
     tree \
@@ -64,7 +64,7 @@ sudo apt install -y \
 # =============================================================================
 # Step 3: ZSH
 # =============================================================================
-echo "[3/12] Installing ZSH..."
+echo "[3/13] Installing ZSH..."
 if ! command -v zsh &> /dev/null; then
     sudo apt install -y zsh
     # Set ZSH as default shell
@@ -77,7 +77,7 @@ fi
 # =============================================================================
 # Step 4: Oh My Zsh
 # =============================================================================
-echo "[4/12] Installing Oh My Zsh..."
+echo "[4/13] Installing Oh My Zsh..."
 if [ ! -d ~/.oh-my-zsh ]; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 else
@@ -87,7 +87,7 @@ fi
 # =============================================================================
 # Step 5: Docker
 # =============================================================================
-echo "[5/12] Installing Docker..."
+echo "[5/13] Installing Docker..."
 if ! command -v docker &> /dev/null; then
     # Remove old versions if any
     sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
@@ -122,7 +122,7 @@ fi
 # =============================================================================
 # Step 6: kubectl
 # =============================================================================
-echo "[6/12] Installing kubectl..."
+echo "[6/13] Installing kubectl..."
 if ! command -v kubectl &> /dev/null; then
     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
@@ -134,7 +134,7 @@ fi
 # =============================================================================
 # Step 7: k3d
 # =============================================================================
-echo "[7/12] Installing k3d..."
+echo "[7/13] Installing k3d..."
 if ! command -v k3d &> /dev/null; then
     curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 else
@@ -144,7 +144,7 @@ fi
 # =============================================================================
 # Step 8: Helm + k9s
 # =============================================================================
-echo "[8/12] Installing Helm and k9s..."
+echo "[8/13] Installing Helm and k9s..."
 
 # Ensure ~/.local/bin exists and is in PATH
 mkdir -p ~/.local/bin
@@ -174,7 +174,7 @@ fi
 # =============================================================================
 # Step 9: Python (uv)
 # =============================================================================
-echo "[9/12] Installing Python tools (uv)..."
+echo "[9/13] Installing Python tools (uv)..."
 if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 else
@@ -184,7 +184,7 @@ fi
 # =============================================================================
 # Step 10: Node.js (fnm + bun)
 # =============================================================================
-echo "[10/12] Installing Node.js tools (fnm, bun)..."
+echo "[10/13] Installing Node.js tools (fnm, bun)..."
 if ! command -v fnm &> /dev/null; then
     curl -fsSL https://fnm.vercel.app/install | bash
 else
@@ -200,7 +200,7 @@ fi
 # =============================================================================
 # Step 11: Claude Code CLI
 # =============================================================================
-echo "[11/12] Installing Claude Code..."
+echo "[11/13] Installing Claude Code..."
 if ! command -v claude &> /dev/null; then
     # Native installation via official installer
     curl -fsSL https://claude.ai/install.sh | bash
@@ -213,7 +213,7 @@ fi
 # =============================================================================
 # Step 12: Git Configuration
 # =============================================================================
-echo "[12/12] Configuring Git..."
+echo "[12/13] Configuring Git..."
 
 # Git credential helper for HTTPS (stores credentials securely)
 git config --global credential.helper store
@@ -239,6 +239,35 @@ if command -v delta &> /dev/null; then
 fi
 
 echo "Git configured with aliases and credential helper"
+
+# =============================================================================
+# Step 13: GitHub CLI (gh) + GitLab CLI (glab)
+# =============================================================================
+echo "[13/13] Installing GitHub CLI and GitLab CLI..."
+
+# GitHub CLI (gh)
+if ! command -v gh &> /dev/null; then
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    sudo apt update
+    sudo apt install -y gh
+    echo "GitHub CLI installed. Run 'gh auth login' to authenticate."
+else
+    echo "GitHub CLI already installed, skipping"
+fi
+
+# GitLab CLI (glab)
+if ! command -v glab &> /dev/null; then
+    GLAB_VERSION=$(curl -s https://api.github.com/repos/gitlab-org/cli/releases/latest | grep tag_name | cut -d '"' -f 4 | sed 's/v//')
+    curl -sLO "https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_Linux_x86_64.tar.gz"
+    tar xzf "glab_${GLAB_VERSION}_Linux_x86_64.tar.gz"
+    sudo install -o root -g root -m 0755 bin/glab /usr/local/bin/glab
+    rm -rf "glab_${GLAB_VERSION}_Linux_x86_64.tar.gz" bin/
+    echo "GitLab CLI installed. Run 'glab auth login' to authenticate."
+else
+    echo "GitLab CLI already installed, skipping"
+fi
 
 # =============================================================================
 # Dotfiles
@@ -291,6 +320,7 @@ echo "  - kubectl, k3d, Helm, k9s"
 echo "  - uv (Python), fnm + bun (Node.js)"
 echo "  - Claude Code CLI (+ ccstatusline config)"
 echo "  - Git aliases and credential helper"
+echo "  - GitHub CLI (gh) + GitLab CLI (glab)"
 echo ""
 echo "Next steps:"
 echo "  1. Log out and back in (for docker group + zsh)"
