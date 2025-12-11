@@ -215,34 +215,22 @@ else
 fi
 
 # =============================================================================
-# Step 12: Git Configuration
+# Step 12: Git Configuration Check
 # =============================================================================
-echo "[12/13] Configuring Git..."
+echo "[12/13] Checking Git configuration..."
 
-# Git credential helper for HTTPS (stores credentials securely)
-git config --global credential.helper store
-
-# Useful Git aliases
-git config --global alias.st status
-git config --global alias.co checkout
-git config --global alias.br branch
-git config --global alias.ci commit
-git config --global alias.lg "log --oneline --graph --decorate"
-git config --global alias.last "log -1 HEAD"
-git config --global alias.unstage "reset HEAD --"
-
-# Better defaults
-git config --global init.defaultBranch main
-git config --global pull.rebase false
-git config --global push.autoSetupRemote true
-
-# Delta diff viewer (optional, if installed)
+# Git config will be set via dotfiles/gitconfig symlink
+# Just add delta support if available
 if command -v delta &> /dev/null; then
     git config --global core.pager delta
     git config --global interactive.diffFilter "delta --color-only"
+    echo "Delta diff viewer configured"
 fi
 
-echo "Git configured with aliases and credential helper"
+echo "Git aliases and settings will be applied via dotfiles"
+echo "NOTE: Remember to set your identity after setup:"
+echo "  git config --global user.name \"Your Name\""
+echo "  git config --global user.email \"your-email@example.com\""
 
 # =============================================================================
 # Step 13: GitHub CLI (gh) + GitLab CLI (glab)

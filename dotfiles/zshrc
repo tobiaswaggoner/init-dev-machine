@@ -111,15 +111,15 @@ alias sourcerc="source ~/.zshrc"
 . "$HOME/.local/bin/env"
 
 # fnm
-FNM_PATH="/home/tobias/.local/share/fnm"
+FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
   export PATH="$FNM_PATH:$PATH"
   eval "`fnm env`"
 fi
-eval "$(fnm env --use-on-cd)"
+eval "$(fnm env --use-on-cd)" 2>/dev/null
 
 # bun completions
-[ -s "/home/tobias/.bun/_bun" ] && source "/home/tobias/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -134,7 +134,9 @@ if (( $+commands[kubectl] )); then
     # 2. Alias 'k' setzen
     alias k=kubectl
 
-    alias k3d-reset='k3d cluster delete my-dev && k3d cluster create my-dev -p "8080:80@loadbalancer" -v "$HOME/k3d-vol/postgres-data:/tmp/k3d-data@server:0" --agents 1'
+    # Use 'make cluster-reset' from infrastructure repo for full cluster reset
+    # Quick alias for simple reset without config file:
+    alias k3d-reset='k3d cluster delete my-dev 2>/dev/null; k3d cluster create my-dev -p "8080:80@loadbalancer" --agents 1'
     
     # 3. Autocomplete auch für den Alias 'k' aktivieren
     compdef k=kubectl

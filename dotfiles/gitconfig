@@ -1,5 +1,30 @@
-[user]
-	name = Tobias Waggoner
-	email = tobias.waggoner.ext@ane.internal
+# Git configuration template
+# NOTE: user.name and user.email are NOT set here
+# Configure them after setup with:
+#   git config --global user.name "Your Name"
+#   git config --global user.email "your-email@example.com"
+
 [core]
-	autocrlf = input
+    autocrlf = input
+    editor = vim
+
+[credential]
+    helper = store
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = false
+
+[push]
+    autoSetupRemote = true
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    lg = log --oneline --graph --decorate
+    last = log -1 HEAD
+    unstage = reset HEAD --
