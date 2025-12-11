@@ -4,17 +4,23 @@ Local development infrastructure for WSL2/k3d environment.
 
 ## Quick Start
 
+**New machine?** See [Complete Setup Guide](docs/SETUP-NEW-MACHINE.md)
+
+**Already have the repo cloned?**
 ```bash
-# 1. Bootstrap WSL environment (fresh Debian - installs EVERYTHING)
+# 1. Run bootstrap (installs all tools)
 ./scripts/bootstrap.sh
 
 # 2. Log out and back in (for docker group + zsh)
 
-# 3. Create cluster and deploy infrastructure
+# 3. Start Docker and create cluster
+sudo service docker start
 make cluster-up
+
+# 4. Deploy infrastructure services
 make infra-up
 
-# 4. Verify
+# 5. Verify
 kubectl get pods -A
 ```
 

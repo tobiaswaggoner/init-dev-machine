@@ -1,9 +1,14 @@
 #!/bin/bash
-# Bootstrap script for fresh WSL Debian installation
-# Installs all required development tools from scratch
+# Bootstrap script for WSL Debian development environment
+# Installs all required development tools
 #
-# Usage: curl -fsSL <raw-url> | bash
-#    or: ./bootstrap.sh
+# Prerequisites (installed in Phase 2 of setup):
+#   - git, curl, wget (for cloning this repo)
+#   - SSH key added to GitHub
+#
+# Usage: ./scripts/bootstrap.sh
+#
+# Safe to re-run - skips already installed components
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,7 +17,6 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 echo "=========================================="
 echo "WSL Development Environment Setup"
 echo "=========================================="
-echo "Starting from fresh Debian installation"
 echo ""
 
 # Check if running on Debian/Ubuntu

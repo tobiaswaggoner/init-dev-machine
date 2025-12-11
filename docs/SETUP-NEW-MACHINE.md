@@ -7,315 +7,297 @@ Complete step-by-step guide to set up a development environment from a fresh Win
 
 ---
 
-## Prerequisites
+## Overview
 
-- Windows 11 (or Windows 10 version 2004+)
-- Local admin rights (only for WSL installation)
-- Internet connection
-- GitHub account with access to the init-dev-machine repo (or your fork)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PHASE 1: Windows (requires Admin)                         │
+│  └─> Install WSL2 + Debian                                 │
+├─────────────────────────────────────────────────────────────┤
+│  PHASE 2: Pre-Bootstrap (manual, copy&paste)               │
+│  └─> Install git, create SSH key, clone repo               │
+├─────────────────────────────────────────────────────────────┤
+│  PHASE 3: Automated Bootstrap                              │
+│  └─> Run bootstrap.sh (installs everything else)           │
+├─────────────────────────────────────────────────────────────┤
+│  PHASE 4: Post-Setup (manual)                              │
+│  └─> Configure identity, authenticate CLIs                 │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Step 1: Install WSL2 with Debian (requires Admin)
+# Phase 1: Windows Setup (requires Admin)
 
-This is the **only step** that requires local administrator rights.
+## Step 1.1: Install WSL2 with Debian
 
-### Option A: PowerShell (Recommended)
+Open **PowerShell as Administrator** and run:
 
-1. Open **PowerShell as Administrator**
-2. Run:
-   ```powershell
-   wsl --install -d Debian
-   ```
-3. **Restart your computer** when prompted
+```powershell
+wsl --install -d Debian
+```
 
-### Option B: Manual Installation
+**Restart your computer** when prompted.
 
-If the above doesn't work:
-
-1. Open **PowerShell as Administrator**
-2. Enable WSL:
-   ```powershell
-   dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-   dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-   ```
-3. **Restart your computer**
-4. Download and install the [WSL2 Linux kernel update](https://aka.ms/wsl2kernel)
-5. Set WSL2 as default:
-   ```powershell
-   wsl --set-default-version 2
-   ```
-6. Install Debian from Microsoft Store or:
-   ```powershell
-   wsl --install -d Debian
-   ```
-
-### First Launch
-
-After restart, Debian will launch automatically (or search for "Debian" in Start menu):
-
+After restart, Debian will launch automatically:
 1. Wait for installation to complete
 2. Create your UNIX username (e.g., your first name lowercase)
-3. Create a password (can be simple, you'll use `sudo` with it)
+3. Create a password (can be simple, you'll use it for `sudo`)
 
-**Verify installation**:
+### Verify Installation
+
 ```bash
-cat /etc/os-release  # Should show Debian
-wsl.exe -l -v        # Should show Debian with VERSION 2
+cat /etc/os-release    # Should show Debian
+wsl.exe -l -v          # Should show VERSION 2
+```
+
+### Troubleshooting WSL Installation
+
+If `wsl --install` doesn't work, run these commands in PowerShell (Admin):
+
+```powershell
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+# Restart, then:
+wsl --set-default-version 2
+wsl --install -d Debian
 ```
 
 ---
 
-## Step 2: Initial System Update
+# Phase 2: Pre-Bootstrap Setup
 
-In your new Debian terminal:
+These steps prepare your system to clone the infrastructure repo.
+
+## Step 2.1: Install Minimal Prerequisites
+
+Copy and paste this entire block into your Debian terminal:
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl wget git
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 2.1: Install git and basic tools
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sudo apt update && sudo apt install -y git curl wget ca-certificates
+```
+
+## Step 2.2: Generate SSH Key
+
+Copy and paste (replace email with yours):
+
+```bash
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 2.2: Generate SSH key for GitHub
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ssh-keygen -t ed25519 -C "your-email@example.com" -N "" -f ~/.ssh/id_ed25519
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Copy this PUBLIC KEY and add it to GitHub:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+cat ~/.ssh/id_ed25519.pub
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+```
+
+## Step 2.3: Add SSH Key to GitHub
+
+1. Copy the public key output from above
+2. Go to: **https://github.com/settings/keys**
+3. Click **"New SSH key"**
+4. Title: `WSL Debian` (or any name)
+5. Paste the key
+6. Click **"Add SSH key"**
+
+### Verify GitHub Connection
+
+```bash
+ssh -T git@github.com
+# Should say: "Hi username! You've successfully authenticated..."
+```
+
+## Step 2.4: Clone the Infrastructure Repo
+
+```bash
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 2.4: Clone infrastructure repo
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+mkdir -p ~/src
+cd ~/src
+git clone git@github.com:tobiaswaggoner/init-dev-machine.git infrastructure
+cd infrastructure
 ```
 
 ---
 
-## Step 3: Clone the Infrastructure Repository
+# Phase 3: Automated Bootstrap
 
-### Option A: HTTPS with GitHub Token (Private Repo)
-
-1. **Create a GitHub Personal Access Token**:
-   - Go to https://github.com/settings/tokens
-   - Click "Generate new token (classic)"
-   - Name: `wsl-setup`
-   - Scopes: `repo` (full control)
-   - Click "Generate token"
-   - **Copy the token immediately!**
-
-2. **Clone the repo**:
-   ```bash
-   mkdir -p ~/src
-   cd ~/src
-   git clone https://github.com/tobiaswaggoner/init-dev-machine.git infrastructure
-   # Username: your-github-username
-   # Password: paste-your-token-here
-   ```
-
-### Option B: SSH Key
-
-1. **Generate SSH key**:
-   ```bash
-   ssh-keygen -t ed25519 -C "your-email@example.com"
-   # Press Enter for default location
-   # Enter passphrase (or leave empty)
-   ```
-
-2. **Add key to GitHub**:
-   ```bash
-   cat ~/.ssh/id_ed25519.pub
-   # Copy the output
-   ```
-   - Go to https://github.com/settings/keys
-   - Click "New SSH key"
-   - Paste your public key
-   - Save
-
-3. **Clone the repo**:
-   ```bash
-   mkdir -p ~/src
-   cd ~/src
-   git clone git@github.com:tobiaswaggoner/init-dev-machine.git infrastructure
-   ```
-
----
-
-## Step 4: Run Bootstrap Script
+## Step 3.1: Run Bootstrap Script
 
 ```bash
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 3.1: Run full bootstrap
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 cd ~/src/infrastructure
 chmod +x scripts/bootstrap.sh
 ./scripts/bootstrap.sh
 ```
 
-This will install (13 steps):
-1. Essential system packages (curl, wget, build-essential, ...)
-2. CLI utilities (htop, jq, tree, vim, ...)
-3. ZSH shell
-4. Oh My Zsh
-5. Docker + Docker Compose
-6. kubectl
-7. k3d
-8. Helm + k9s
-9. uv (Python)
-10. fnm + bun (Node.js)
-11. Claude Code CLI
-12. Git configuration + aliases
-13. GitHub CLI (gh) + GitLab CLI (glab)
+This installs (13 steps, ~10-15 min):
 
-**Duration**: ~10-15 minutes depending on internet speed
+| Step | Component |
+|------|-----------|
+| 1-2 | System packages + CLI tools |
+| 3-4 | ZSH + Oh My Zsh |
+| 5 | Docker + Docker Compose |
+| 6-7 | kubectl + k3d |
+| 8 | Helm + k9s |
+| 9 | uv (Python) |
+| 10 | fnm + bun (Node.js) |
+| 11 | Claude Code CLI |
+| 12 | Git configuration + aliases |
+| 13 | GitHub CLI (gh) + GitLab CLI (glab) |
 
----
-
-## Step 5: Re-login to Apply Changes
-
-The bootstrap script made changes that require a new session:
+## Step 3.2: Apply Changes (Re-login)
 
 ```bash
 exit
 ```
 
-Then reopen Debian from Start menu, or in PowerShell:
-```powershell
-wsl -d Debian
-```
+Reopen Debian from Start menu, then verify:
 
-**Verify ZSH is active**:
 ```bash
-echo $SHELL  # Should show /usr/bin/zsh
+echo $SHELL           # Should show /usr/bin/zsh
+docker --version      # Should show Docker version
+kubectl version --client  # Should show kubectl version
 ```
 
 ---
 
-## Step 6: Configure Git Identity
+# Phase 4: Post-Setup Configuration
+
+## Step 4.1: Start Docker
+
+Docker needs to be started manually in WSL:
+
+```bash
+sudo service docker start
+```
+
+**Optional**: Auto-start Docker on terminal open:
+```bash
+echo 'sudo service docker start 2>/dev/null' >> ~/.zshrc
+```
+
+## Step 4.2: Configure Git Identity
 
 ```bash
 git config --global user.name "Your Full Name"
 git config --global user.email "your-email@example.com"
 ```
 
-For work projects, use your work email.
-
----
-
-## Step 7: Authenticate Claude Code
+## Step 4.3: Authenticate Claude Code
 
 ```bash
 claude
+# Follow browser authentication prompts
 ```
 
-Follow the prompts to:
-1. Open the authentication URL in your browser
-2. Log in with your Anthropic account
-3. Authorize the CLI
+## Step 4.4: Authenticate GitHub CLI
 
-After authentication, the ccstatusline will be active (configured in `~/.claude/settings.json`).
-
----
-
-## Step 8: Start Docker Service
-
-Docker needs to be started manually in WSL (no systemd by default):
-
-```bash
-sudo service docker start
-```
-
-**Verify Docker works**:
-```bash
-docker run hello-world
-```
-
-> **Tip**: Add to your shell startup if you want Docker to auto-start:
-> ```bash
-> echo 'sudo service docker start > /dev/null 2>&1' >> ~/.zshrc
-> ```
-> (This will prompt for password on first terminal open)
-
----
-
-## Step 9: Create and Test the Kubernetes Cluster
-
-```bash
-cd ~/src/infrastructure
-make cluster-up
-```
-
-**Verify cluster is running**:
-```bash
-kubectl get nodes
-# Should show: my-dev-server-0 and my-dev-agent-0
-```
-
----
-
-## Step 10: Deploy Infrastructure Services (Optional)
-
-If you need the databases right away:
-
-```bash
-make infra-up
-```
-
-This deploys:
-- PostgreSQL (port 5432)
-- MongoDB (port 27017)
-- Redis (port 6379)
-- Kafka via Strimzi (port 9092)
-
-**Check status**:
-```bash
-make infra-status
-```
-
----
-
-## Step 11: Configure VS Code (Optional)
-
-If using VS Code on Windows:
-
-1. Install the **Remote - WSL** extension
-2. In WSL terminal, navigate to your project and run:
-   ```bash
-   code .
-   ```
-3. VS Code will install the server component and open
-
-Recommended extensions for the WSL environment:
-- Python
-- Pylance
-- ESLint
-- Prettier
-- GitLens
-- Kubernetes
-- Docker
-
----
-
-## Step 12: Authenticate Git CLIs (Optional)
-
-### GitHub CLI
 ```bash
 gh auth login
-# Select: GitHub.com
-# Select: HTTPS
-# Authenticate via browser
+# Select: GitHub.com → HTTPS → Login with browser
 ```
 
-### GitLab CLI
+## Step 4.5: Authenticate GitLab CLI (if needed)
+
 ```bash
 glab auth login
-# Enter your GitLab instance URL (or press Enter for gitlab.com)
-# Select: Token
-# Paste your Personal Access Token (see GITLAB-SETUP.md)
+# Enter GitLab instance URL (or Enter for gitlab.com)
+# Select: Token → Paste your Personal Access Token
 ```
 
 For GitLab token creation, see [GITLAB-SETUP.md](GITLAB-SETUP.md).
 
+## Step 4.6: Create Kubernetes Cluster
+
+```bash
+cd ~/src/infrastructure
+make cluster-up
+kubectl get nodes    # Verify nodes are ready
+```
+
+## Step 4.7: Deploy Infrastructure Services (Optional)
+
+```bash
+make infra-up        # PostgreSQL, MongoDB, Redis, Kafka
+make infra-status    # Check deployment status
+```
+
 ---
 
-## Post-Setup Checklist
+# Quick Setup Script (All of Phase 2)
+
+For experienced users, here's Phase 2 as a single copy-paste block:
+
+```bash
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# COMPLETE PHASE 2: Pre-Bootstrap Setup
+# Run this after fresh Debian WSL installation
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Install prerequisites
+sudo apt update && sudo apt install -y git curl wget ca-certificates
+
+# Generate SSH key (press Enter for defaults, or customize)
+read -p "Enter your email for SSH key: " EMAIL
+ssh-keygen -t ed25519 -C "$EMAIL" -N "" -f ~/.ssh/id_ed25519
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+# Display public key
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "ACTION REQUIRED: Add this key to GitHub"
+echo "→ https://github.com/settings/keys"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+cat ~/.ssh/id_ed25519.pub
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+read -p "Press Enter after adding key to GitHub..."
+
+# Test GitHub connection
+ssh -T git@github.com
+
+# Clone repo
+mkdir -p ~/src
+git clone git@github.com:tobiaswaggoner/init-dev-machine.git ~/src/infrastructure
+
+echo ""
+echo "✓ Phase 2 complete! Now run:"
+echo "  cd ~/src/infrastructure && ./scripts/bootstrap.sh"
+```
+
+---
+
+# Post-Setup Checklist
 
 - [ ] WSL2 with Debian installed
+- [ ] SSH key added to GitHub
+- [ ] Infrastructure repo cloned
 - [ ] Bootstrap script completed
 - [ ] ZSH is default shell
+- [ ] Docker running
 - [ ] Git identity configured
 - [ ] Claude Code authenticated
-- [ ] Docker running
-- [ ] k3d cluster created
+- [ ] gh CLI authenticated
+- [ ] (Optional) glab CLI authenticated
+- [ ] (Optional) k3d cluster created
 - [ ] (Optional) Infrastructure services deployed
-- [ ] (Optional) VS Code configured
-- [ ] (Optional) GitLab access configured
 
 ---
 
-## Quick Reference Commands
+# Quick Reference
 
 | Task | Command |
 |------|---------|
@@ -326,77 +308,47 @@ For GitLab token creation, see [GITLAB-SETUP.md](GITLAB-SETUP.md).
 | Deploy services | `make infra-up` |
 | Check pods | `kubectl get pods -A` |
 | K8s dashboard | `k9s` |
-| Forward PostgreSQL | `make port-forward-postgres` |
 
 ---
 
-## Troubleshooting
-
-### WSL won't start
-```powershell
-# In PowerShell (Admin)
-wsl --shutdown
-wsl --update
-```
+# Troubleshooting
 
 ### Docker permission denied
 ```bash
-# Add yourself to docker group (should be done by bootstrap)
 sudo usermod -aG docker $USER
 # Then logout and login again
 ```
 
+### "command not found" after bootstrap
+```bash
+source ~/.zshrc
+# Or restart terminal
+```
+
 ### Cluster won't start
 ```bash
-# Check Docker is running
-docker ps
-
-# If not:
 sudo service docker start
-
-# Then retry
 make cluster-up
 ```
 
-### "command not found" after bootstrap
-```bash
-# Reload shell config
-source ~/.zshrc
-
-# Or restart terminal
-exit
-```
-
-### Slow file access in WSL
-Store your code in the Linux filesystem (`~/src/`), not in `/mnt/c/`. Windows filesystem access from WSL is significantly slower.
+### Slow file access
+Store code in Linux filesystem (`~/src/`), not `/mnt/c/`.
 
 ---
 
-## Customizing for Different Clients
+# Customizing for Different Clients
 
-This setup is designed to be client-agnostic. To customize for a specific client:
-
-1. **Fork or copy** this repo to a client-specific location
-2. **Modify** `k8s/helm/*/values.yaml` for client-specific services
-3. **Add** client-specific tools to `scripts/bootstrap.sh`
-4. **Update** credentials in `docs/GITLAB-SETUP.md`
-
-The core infrastructure (Docker, k3d, Helm, etc.) remains the same across all clients.
+1. **Fork** this repo to a client-specific location
+2. **Modify** `k8s/helm/*/values.yaml` for client services
+3. **Update** repo URL in this guide
+4. **Add** client-specific tools to `bootstrap.sh`
 
 ---
 
-## Updating the Environment
-
-To pull updates from the repo:
+# Updating the Environment
 
 ```bash
 cd ~/src/infrastructure
 git pull
+./scripts/bootstrap.sh   # Safe to re-run
 ```
-
-To re-run bootstrap (safe to run multiple times):
-```bash
-./scripts/bootstrap.sh
-```
-
-The script skips already-installed components.
