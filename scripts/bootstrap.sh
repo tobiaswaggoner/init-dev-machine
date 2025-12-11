@@ -180,12 +180,13 @@ fi
 # =============================================================================
 echo "[8/13] Installing Helm and k9s..."
 
-# Ensure ~/.local/bin exists and is in PATH
+# Ensure ~/.local/bin exists and is in PATH for this session
 mkdir -p ~/.local/bin
+export PATH="$HOME/.local/bin:$PATH"
 
 if ! command -v helm &> /dev/null; then
     curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | \
-        HELM_INSTALL_DIR=~/.local/bin USE_SUDO=false bash
+        HELM_INSTALL_DIR=$HOME/.local/bin USE_SUDO=false bash
 
     # Add Helm repos
     ~/.local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
