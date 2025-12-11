@@ -1,14 +1,15 @@
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#------------------------------------------------------------------------------
 # Remove Test WSL Instance
 # Run in PowerShell (no Admin required)
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#------------------------------------------------------------------------------
 
 $DistroName = "Debian-Test"
 $InstallPath = "$env:USERPROFILE\wsl\debian-test"
 
-Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "========================================================" -ForegroundColor Yellow
 Write-Host "  Removing Test WSL Instance: $DistroName" -ForegroundColor Yellow
-Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "========================================================" -ForegroundColor Yellow
 Write-Host ""
 
 $response = Read-Host "Are you sure you want to delete '$DistroName'? [y/N]"
