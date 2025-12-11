@@ -329,12 +329,41 @@ chmod 777 ~/k3d-vol/*-data
 echo ""
 echo "Configuring WSL settings..."
 
-# Create .wslconfig hint if not exists
-if [ ! -f /mnt/c/Users/$USER/.wslconfig ] 2>/dev/null; then
-    echo "TIP: Consider creating C:\\Users\\$USER\\.wslconfig with:"
-    echo "  [wsl2]"
-    echo "  memory=8GB"
-    echo "  processors=4"
+# Find Windows user directory
+WIN_USER_DIR=""
+for dir in /mnt/c/Users/*/; do
+    dirname=$(basename "$dir")
+    # Skip system directories
+    if [[ "$dirname" != "Public" && "$dirname" != "Default" && "$dirname" != "Default User" && "$dirname" != "All Users" ]]; then
+        WIN_USER_DIR="$dir"
+        break
+    fi
+done
+
+# Create .wslconfig if we found the Windows user dir and file doesn't exist
+if [ -n "$WIN_USER_DIR" ] && [ ! -f "${WIN_USER_DIR}.wslconfig" ]; then
+    # Calculate memory: total RAM - 10GB for Windows (minimum 8GB for WSL)
+    TOTAL_RAM_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    TOTAL_RAM_GB=$((TOTAL_RAM_KB / 1024 / 1024))
+    WSL_RAM_GB=$((TOTAL_RAM_GB - 10))
+    [ $WSL_RAM_GB -lt 8 ] && WSL_RAM_GB=8
+
+    # Calculate processors: 50% of total
+    TOTAL_CPUS=$(nproc)
+    WSL_CPUS=$((TOTAL_CPUS / 2))
+    [ $WSL_CPUS -lt 2 ] && WSL_CPUS=2
+
+    echo "Creating ${WIN_USER_DIR}.wslconfig (${WSL_RAM_GB}GB RAM, ${WSL_CPUS} CPUs)..."
+    cat > "${WIN_USER_DIR}.wslconfig" << WSLCONFIG
+[wsl2]
+memory=${WSL_RAM_GB}GB
+processors=${WSL_CPUS}
+WSLCONFIG
+    echo "NOTE: WSL restart required for .wslconfig changes (wsl --shutdown)"
+else
+    if [ -f "${WIN_USER_DIR}.wslconfig" ]; then
+        echo ".wslconfig already exists, skipping"
+    fi
 fi
 
 # =============================================================================
