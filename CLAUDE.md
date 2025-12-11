@@ -35,10 +35,11 @@ infrastructure/
 ├── k8s/
 │   ├── cluster/             # k3d cluster configuration
 │   │   └── k3d-config.yaml
-│   └── helm/                # Helm charts for services
-│       ├── postgres/
-│       ├── mongodb/
-│       ├── redis/
+│   ├── manifests/           # K8s manifests (official images)
+│   │   ├── postgres.yaml    # PostgreSQL StatefulSet
+│   │   ├── mongodb.yaml     # MongoDB StatefulSet
+│   │   └── redis.yaml       # Redis Deployment
+│   └── helm/                # Helm charts (Kafka only)
 │       └── strimzi/         # Kafka via Strimzi Operator
 ├── dotfiles/
 │   ├── zshrc                # Shell configuration
@@ -102,11 +103,11 @@ These survive cluster resets.
 ## Important Notes for LLMs
 1. **Cluster can be reset anytime** - design for stateless deployments
 2. **Host volumes persist** - data survives cluster deletion
-3. **Bitnami charts** used for PostgreSQL, MongoDB, Redis - check values.yaml
+3. **Official Docker images** for PostgreSQL, MongoDB, Redis - see k8s/manifests/
 4. **Strimzi** for Kafka - uses Custom Resources, not plain Helm values
 5. **No external ingress** - local development only, use port-forward or LoadBalancer
 6. **Bootstrap script** installs everything from fresh Debian - 13 steps total
 7. **Claude Code** is pre-configured with ccstatusline in `~/.claude/settings.json`
 8. **Git credentials** stored via `git credential.helper store` in `~/.git-credentials`
-9. **Image versions** - Using Bitnami chart defaults (auto-updated), Strimzi 0.49.1 pinned
+9. **Image versions pinned** - postgres:17-alpine, mongo:8, redis:7-alpine, Strimzi 0.49.1
 10. **Port conflict handling** - `make cluster-up` automatically finds free port if 8080 is occupied

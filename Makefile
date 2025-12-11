@@ -10,6 +10,7 @@ KUBECTL := kubectl
 K3D := k3d
 CLUSTER_NAME := my-dev
 NAMESPACE := infra
+MANIFESTS := k8s/manifests
 
 # Default target
 help:
@@ -70,46 +71,43 @@ namespace:
 	@$(KUBECTL) create namespace $(NAMESPACE) --dry-run=client -o yaml | $(KUBECTL) apply -f -
 
 # =============================================================================
-# PostgreSQL
+# PostgreSQL (Official image, not Bitnami)
 # =============================================================================
 
 postgres-up: namespace
-	$(HELM) upgrade --install postgres bitnami/postgresql \
-		--namespace $(NAMESPACE) \
-		--values k8s/helm/postgres/values.yaml \
-		--wait
+	$(KUBECTL) apply -f $(MANIFESTS)/postgres.yaml
+	@echo "Waiting for PostgreSQL to be ready..."
+	@$(KUBECTL) wait --for=condition=ready pod -l app=postgres -n $(NAMESPACE) --timeout=120s
 
 postgres-down:
-	-$(HELM) uninstall postgres --namespace $(NAMESPACE)
+	-$(KUBECTL) delete -f $(MANIFESTS)/postgres.yaml
 
 # =============================================================================
-# MongoDB
+# MongoDB (Official image, not Bitnami)
 # =============================================================================
 
 mongodb-up: namespace
-	$(HELM) upgrade --install mongodb bitnami/mongodb \
-		--namespace $(NAMESPACE) \
-		--values k8s/helm/mongodb/values.yaml \
-		--wait
+	$(KUBECTL) apply -f $(MANIFESTS)/mongodb.yaml
+	@echo "Waiting for MongoDB to be ready..."
+	@$(KUBECTL) wait --for=condition=ready pod -l app=mongodb -n $(NAMESPACE) --timeout=120s
 
 mongodb-down:
-	-$(HELM) uninstall mongodb --namespace $(NAMESPACE)
+	-$(KUBECTL) delete -f $(MANIFESTS)/mongodb.yaml
 
 # =============================================================================
-# Redis
+# Redis (Official image, not Bitnami)
 # =============================================================================
 
 redis-up: namespace
-	$(HELM) upgrade --install redis bitnami/redis \
-		--namespace $(NAMESPACE) \
-		--values k8s/helm/redis/values.yaml \
-		--wait
+	$(KUBECTL) apply -f $(MANIFESTS)/redis.yaml
+	@echo "Waiting for Redis to be ready..."
+	@$(KUBECTL) wait --for=condition=ready pod -l app=redis -n $(NAMESPACE) --timeout=60s
 
 redis-down:
-	-$(HELM) uninstall redis --namespace $(NAMESPACE)
+	-$(KUBECTL) delete -f $(MANIFESTS)/redis.yaml
 
 # =============================================================================
-# Strimzi / Kafka
+# Strimzi / Kafka (still uses Helm - not affected by Bitnami changes)
 # =============================================================================
 
 strimzi-up:
@@ -159,7 +157,7 @@ infra-status:
 
 port-forward-postgres:
 	@echo "Forwarding PostgreSQL to localhost:5432 (Ctrl+C to stop)"
-	$(KUBECTL) port-forward svc/postgres-postgresql 5432:5432 -n $(NAMESPACE)
+	$(KUBECTL) port-forward svc/postgres 5432:5432 -n $(NAMESPACE)
 
 port-forward-mongodb:
 	@echo "Forwarding MongoDB to localhost:27017 (Ctrl+C to stop)"
@@ -167,4 +165,4 @@ port-forward-mongodb:
 
 port-forward-redis:
 	@echo "Forwarding Redis to localhost:6379 (Ctrl+C to stop)"
-	$(KUBECTL) port-forward svc/redis-master 6379:6379 -n $(NAMESPACE)
+	$(KUBECTL) port-forward svc/redis 6379:6379 -n $(NAMESPACE)
