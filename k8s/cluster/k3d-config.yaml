@@ -15,8 +15,11 @@ ports:
   - port: 8080:80
     nodeFilters:
       - loadbalancer
-  # Kafka NodePort
+  # Kafka NodePorts (bootstrap + broker)
   - port: 30092:30092
+    nodeFilters:
+      - server:0
+  - port: 30093:30093
     nodeFilters:
       - server:0
 
@@ -40,9 +43,9 @@ options:
         nodeFilters:
           - server:*
 
-# Registry configuration (optional, for local image caching)
-# registries:
-#   create:
-#     name: k3d-registry.localhost
-#     host: "0.0.0.0"
-#     hostPort: "5000"
+# Registry configuration - survives cluster resets, caches images
+registries:
+  create:
+    name: k3d-registry.localhost
+    host: "0.0.0.0"
+    hostPort: "5000"

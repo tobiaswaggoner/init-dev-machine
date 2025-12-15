@@ -77,7 +77,7 @@ namespace:
 postgres-up: namespace
 	$(KUBECTL) apply -f $(MANIFESTS)/postgres.yaml
 	@echo "Waiting for PostgreSQL to be ready..."
-	@$(KUBECTL) wait --for=condition=ready pod -l app=postgres -n $(NAMESPACE) --timeout=120s
+	@$(KUBECTL) wait --for=condition=ready pod -l app=postgres -n $(NAMESPACE) --timeout=600s
 
 postgres-down:
 	-$(KUBECTL) delete -f $(MANIFESTS)/postgres.yaml
@@ -89,7 +89,7 @@ postgres-down:
 mongodb-up: namespace
 	$(KUBECTL) apply -f $(MANIFESTS)/mongodb.yaml
 	@echo "Waiting for MongoDB to be ready..."
-	@$(KUBECTL) wait --for=condition=ready pod -l app=mongodb -n $(NAMESPACE) --timeout=120s
+	@$(KUBECTL) wait --for=condition=ready pod -l app=mongodb -n $(NAMESPACE) --timeout=600s
 
 mongodb-down:
 	-$(KUBECTL) delete -f $(MANIFESTS)/mongodb.yaml
@@ -101,7 +101,7 @@ mongodb-down:
 redis-up: namespace
 	$(KUBECTL) apply -f $(MANIFESTS)/redis.yaml
 	@echo "Waiting for Redis to be ready..."
-	@$(KUBECTL) wait --for=condition=ready pod -l app=redis -n $(NAMESPACE) --timeout=60s
+	@$(KUBECTL) wait --for=condition=ready pod -l app=redis -n $(NAMESPACE) --timeout=600s
 
 redis-down:
 	-$(KUBECTL) delete -f $(MANIFESTS)/redis.yaml
@@ -123,7 +123,7 @@ strimzi-down:
 
 kafka-up: strimzi-up
 	@echo "Waiting for Strimzi operator to be ready..."
-	@$(KUBECTL) wait --for=condition=ready pod -l name=strimzi-cluster-operator -n kafka --timeout=120s
+	@$(KUBECTL) wait --for=condition=ready pod -l name=strimzi-cluster-operator -n kafka --timeout=600s
 	$(KUBECTL) apply -f k8s/helm/strimzi/kafka-node-pool.yaml
 	$(KUBECTL) apply -f k8s/helm/strimzi/kafka-cluster.yaml
 	@echo "Waiting for Kafka to be ready..."
