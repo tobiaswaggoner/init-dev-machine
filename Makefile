@@ -124,10 +124,14 @@ strimzi-down:
 kafka-up: strimzi-up
 	@echo "Waiting for Strimzi operator to be ready..."
 	@$(KUBECTL) wait --for=condition=ready pod -l name=strimzi-cluster-operator -n kafka --timeout=120s
+	$(KUBECTL) apply -f k8s/helm/strimzi/kafka-node-pool.yaml
 	$(KUBECTL) apply -f k8s/helm/strimzi/kafka-cluster.yaml
+	@echo "Waiting for Kafka to be ready..."
+	@$(KUBECTL) wait --for=condition=ready pod -l strimzi.io/cluster=dev-kafka -n kafka --timeout=300s || true
 
 kafka-down:
 	-$(KUBECTL) delete -f k8s/helm/strimzi/kafka-cluster.yaml
+	-$(KUBECTL) delete -f k8s/helm/strimzi/kafka-node-pool.yaml
 	@echo "Kafka cluster removed. Run 'make strimzi-down' to also remove the operator."
 
 # =============================================================================
