@@ -146,8 +146,53 @@ kafka-down:
 # All Infrastructure
 # =============================================================================
 
-infra-up: postgres-up mongodb-up redis-up kafka-up
+# Parallel deployment - postgres, mongodb, redis, and strimzi start simultaneously
+# Kafka cluster waits for strimzi operator to be ready
+infra-up: namespace
+	@echo "Starting infrastructure services in parallel..."
+	@$(MAKE) -j4 _postgres-up _mongodb-up _redis-up _strimzi-up
+	@echo "Base services started. Deploying Kafka cluster..."
+	@$(KUBECTL) apply -f k8s/helm/strimzi/kafka-node-pool.yaml
+	@$(KUBECTL) apply -f k8s/helm/strimzi/kafka-cluster.yaml
+	@echo "Waiting for Kafka pods to be created..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		$(KUBECTL) get pods -l strimzi.io/cluster=dev-kafka -n kafka 2>/dev/null | grep -q dev-kafka && break; \
+		echo "  Waiting for Strimzi to create Kafka pods..."; \
+		sleep 5; \
+	done
+	@echo "Waiting for Kafka to be ready..."
+	@$(KUBECTL) wait --for=condition=ready pod -l strimzi.io/cluster=dev-kafka -n kafka --timeout=600s
 	@echo "All infrastructure services deployed"
+
+# Internal targets for parallel execution (no namespace dependency to avoid race)
+_postgres-up:
+	@$(KUBECTL) apply -f $(MANIFESTS)/postgres.yaml
+	@echo "Waiting for PostgreSQL..."
+	@$(KUBECTL) wait --for=condition=ready pod -l app=postgres -n $(NAMESPACE) --timeout=600s
+
+_mongodb-up:
+	@$(KUBECTL) apply -f $(MANIFESTS)/mongodb.yaml
+	@echo "Waiting for MongoDB..."
+	@$(KUBECTL) wait --for=condition=ready pod -l app=mongodb -n $(NAMESPACE) --timeout=600s
+
+_redis-up:
+	@$(KUBECTL) apply -f $(MANIFESTS)/redis.yaml
+	@echo "Waiting for Redis..."
+	@$(KUBECTL) wait --for=condition=ready pod -l app=redis -n $(NAMESPACE) --timeout=600s
+
+_strimzi-up:
+	@$(KUBECTL) create namespace kafka --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	@$(HELM) upgrade --install strimzi strimzi/strimzi-kafka-operator \
+		--namespace kafka \
+		--version 0.49.1 \
+		--values k8s/helm/strimzi/operator/values.yaml \
+		--wait
+	@echo "Waiting for Strimzi operator..."
+	@$(KUBECTL) wait --for=condition=ready pod -l name=strimzi-cluster-operator -n kafka --timeout=600s
+
+# Sequential targets for individual service management
+infra-up-seq: postgres-up mongodb-up redis-up kafka-up
+	@echo "All infrastructure services deployed (sequential)"
 
 infra-down: kafka-down mongodb-down redis-down postgres-down strimzi-down
 	@echo "All infrastructure services removed"

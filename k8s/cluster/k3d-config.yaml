@@ -43,3 +43,14 @@ options:
         nodeFilters:
           - server:*
 
+# Registry configuration - pull-through cache for docker.io and quay.io
+# Generated from template - do not edit k3d-config.yaml directly
+registries:
+  config: |
+    mirrors:
+      "docker.io":
+        endpoint:
+          - "http://k3d-registry.localhost:5000"
+      "quay.io":
+        endpoint:
+          - "http://k3d-registry-quay:5000"
