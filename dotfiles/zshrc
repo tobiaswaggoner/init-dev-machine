@@ -103,8 +103,17 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# Local bin directories
-export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"
+# Local bin directories - ensure Linux paths come before Windows paths
+# Filter out /mnt/c paths, add our paths first, then append Windows paths at the end
+if [[ "$PATH" == */mnt/c/* ]]; then
+    # Extract Windows paths and Linux paths separately
+    _linux_path=$(echo "$PATH" | tr ':' '\n' | grep -v '^/mnt/c' | tr '\n' ':' | sed 's/:$//')
+    _windows_path=$(echo "$PATH" | tr ':' '\n' | grep '^/mnt/c' | tr '\n' ':' | sed 's/:$//')
+    export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$_linux_path:$_windows_path"
+    unset _linux_path _windows_path
+else
+    export PATH="$HOME/.local/bin:$HOME/.claude/local/bin:$PATH"
+fi
 alias ccyolo="claude --dangerously-skip-permissions"
 alias ccyoloc="claude --dangerously-skip-permissions --continue"
 alias editrc="code ~/.zshrc"

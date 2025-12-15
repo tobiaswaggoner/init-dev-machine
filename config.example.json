@@ -1,0 +1,34 @@
+{
+  "$schema": "./config.schema.json",
+  "_comment": "Copy this file to config.json and fill in your values. Secrets are stored separately in Windows Credential Manager.",
+
+  "user": {
+    "name": "Your Full Name",
+    "email": "your.email@example.com"
+  },
+
+  "github": {
+    "username": "your-github-username",
+    "repo": "your-username/init-dev-machine"
+  },
+
+  "gitlab": {
+    "_comment": "Optional - leave empty if not using GitLab",
+    "host": "gitlab.com",
+    "username": ""
+  },
+
+  "wsl": {
+    "distro_name": "Debian-Dev",
+    "install_path": "%USERPROFILE%\\wsl\\debian-dev",
+    "tarball_path": "%USERPROFILE%\\wsl\\installer\\debian.install.tar.gz",
+    "default_user": "tobias",
+    "default_password": "password"
+  },
+
+  "options": {
+    "install_node_lts": true,
+    "create_k8s_cluster": false,
+    "deploy_infra_services": false
+  }
+}

@@ -21,3 +21,6 @@ k8s/helm/**/Chart.lock
 secrets/
 *.secret
 *.secret.*
+
+# User config (contains personal details, secrets are in Credential Manager)
+config.json

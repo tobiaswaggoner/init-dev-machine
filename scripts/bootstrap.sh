@@ -14,6 +14,24 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
+# =============================================================================
+# Helper: Check if a command exists as a native Linux binary
+# This avoids false positives from Windows binaries exposed via WSL interop
+# (e.g., /mnt/c/Program Files/Docker/Docker/resources/bin/docker)
+# =============================================================================
+is_native_linux_command() {
+    local cmd="$1"
+    local cmd_path
+    cmd_path=$(command -v "$cmd" 2>/dev/null) || return 1
+
+    # Reject if path starts with /mnt/ (Windows path)
+    if [[ "$cmd_path" == /mnt/* ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
 echo "=========================================="
 echo "WSL Development Environment Setup"
 echo "=========================================="
@@ -53,7 +71,7 @@ fi
 # =============================================================================
 if grep -q "microsoft" /proc/version 2>/dev/null; then
     if ! grep -q "systemd=true" /etc/wsl.conf 2>/dev/null; then
-        echo "[0/13] Enabling systemd for WSL..."
+        echo "[0/15] Enabling systemd for WSL..."
         sudo tee /etc/wsl.conf > /dev/null << 'WSLCONF'
 [boot]
 systemd=true
@@ -66,7 +84,7 @@ WSLCONF
         echo "After bootstrap completes, run: wsl --shutdown (in PowerShell)"
         echo ""
     elif ! grep -q "\[interop\]" /etc/wsl.conf 2>/dev/null; then
-        echo "[0/13] Adding interop configuration to WSL..."
+        echo "[0/15] Adding interop configuration to WSL..."
         sudo tee -a /etc/wsl.conf > /dev/null << 'WSLCONF'
 
 [interop]
@@ -81,7 +99,7 @@ fi
 # =============================================================================
 # Step 1: Essential System Packages
 # =============================================================================
-echo "[1/13] Installing essential system packages..."
+echo "[1/15] Installing essential system packages..."
 sudo apt update
 sudo apt install -y \
     curl \
@@ -101,7 +119,7 @@ sudo apt install -y \
 # =============================================================================
 # Step 2: Useful CLI Tools
 # =============================================================================
-echo "[2/13] Installing CLI utilities..."
+echo "[2/15] Installing CLI utilities..."
 sudo apt install -y \
     htop \
     tree \
@@ -121,7 +139,7 @@ sudo apt install -y \
 # =============================================================================
 # Step 3: ZSH
 # =============================================================================
-echo "[3/13] Installing ZSH..."
+echo "[3/15] Installing ZSH..."
 if ! command -v zsh &> /dev/null; then
     sudo apt install -y zsh
     # Set ZSH as default shell
@@ -134,7 +152,7 @@ fi
 # =============================================================================
 # Step 4: Oh My Zsh
 # =============================================================================
-echo "[4/13] Installing Oh My Zsh..."
+echo "[4/15] Installing Oh My Zsh..."
 if [ ! -d ~/.oh-my-zsh ]; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 else
@@ -144,8 +162,8 @@ fi
 # =============================================================================
 # Step 5: Docker
 # =============================================================================
-echo "[5/13] Installing Docker..."
-if ! command -v docker &> /dev/null; then
+echo "[5/15] Installing Docker..."
+if ! is_native_linux_command docker; then
     # Remove old versions if any
     sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
 
@@ -171,7 +189,7 @@ if ! command -v docker &> /dev/null; then
 
     echo "Docker installed. NOTE: Log out and back in for docker group to take effect"
 else
-    echo "Docker already installed, skipping"
+    echo "Docker already installed (native Linux), skipping"
     # Ensure docker is running
     sudo service docker start 2>/dev/null || true
 fi
@@ -179,19 +197,19 @@ fi
 # =============================================================================
 # Step 6: kubectl
 # =============================================================================
-echo "[6/13] Installing kubectl..."
-if ! command -v kubectl &> /dev/null; then
+echo "[6/15] Installing kubectl..."
+if ! is_native_linux_command kubectl; then
     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     rm kubectl
 else
-    echo "kubectl already installed, skipping"
+    echo "kubectl already installed (native Linux), skipping"
 fi
 
 # =============================================================================
 # Step 7: k3d
 # =============================================================================
-echo "[7/13] Installing k3d..."
+echo "[7/15] Installing k3d..."
 if ! command -v k3d &> /dev/null; then
     curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 else
@@ -201,7 +219,7 @@ fi
 # =============================================================================
 # Step 8: Helm + k9s
 # =============================================================================
-echo "[8/13] Installing Helm and k9s..."
+echo "[8/15] Installing Helm and k9s..."
 
 # Ensure ~/.local/bin exists and is in PATH for this session
 mkdir -p ~/.local/bin
@@ -232,7 +250,7 @@ fi
 # =============================================================================
 # Step 9: Python (uv)
 # =============================================================================
-echo "[9/13] Installing Python tools (uv)..."
+echo "[9/15] Installing Python tools (uv)..."
 if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 else
@@ -242,7 +260,7 @@ fi
 # =============================================================================
 # Step 10: Node.js (fnm + bun)
 # =============================================================================
-echo "[10/13] Installing Node.js tools (fnm, bun)..."
+echo "[10/15] Installing Node.js tools (fnm, bun)..."
 if ! command -v fnm &> /dev/null; then
     curl -fsSL https://fnm.vercel.app/install | bash
 else
@@ -258,20 +276,20 @@ fi
 # =============================================================================
 # Step 11: Claude Code CLI
 # =============================================================================
-echo "[11/13] Installing Claude Code..."
-if ! command -v claude &> /dev/null; then
+echo "[11/15] Installing Claude Code..."
+if ! is_native_linux_command claude; then
     # Native installation via official installer
     curl -fsSL https://claude.ai/install.sh | bash
     echo "Claude Code installed"
     echo "NOTE: Run 'claude' and authenticate with your Anthropic account"
 else
-    echo "Claude Code already installed, skipping"
+    echo "Claude Code already installed (native Linux), skipping"
 fi
 
 # =============================================================================
 # Step 12: Git Configuration (aliases only - identity set after dotfiles)
 # =============================================================================
-echo "[12/13] Configuring Git..."
+echo "[12/15] Configuring Git..."
 
 # Delta diff viewer (optional, if installed)
 if command -v delta &> /dev/null; then
@@ -281,12 +299,60 @@ if command -v delta &> /dev/null; then
 fi
 
 # =============================================================================
-# Step 13: GitHub CLI (gh) + GitLab CLI (glab)
+# Step 13: Tailscale
 # =============================================================================
-echo "[13/13] Installing GitHub CLI and GitLab CLI..."
+echo "[13/15] Installing Tailscale..."
+if ! command -v tailscale &> /dev/null; then
+    # Use official Tailscale installer (works on Debian/Ubuntu)
+    curl -fsSL https://tailscale.com/install.sh | sh
+
+    # Start tailscaled service (requires systemd)
+    if systemctl is-system-running &>/dev/null; then
+        sudo systemctl enable --now tailscaled
+        echo "Tailscale installed and tailscaled service started."
+        echo "NOTE: Run 'sudo tailscale up' to connect to your Tailnet."
+    else
+        echo "Tailscale installed."
+        echo "NOTE: systemd not running. After WSL restart, run:"
+        echo "  sudo systemctl enable --now tailscaled"
+        echo "  sudo tailscale up"
+    fi
+else
+    echo "Tailscale already installed, skipping"
+    # Ensure tailscaled is running
+    if systemctl is-system-running &>/dev/null; then
+        sudo systemctl enable --now tailscaled 2>/dev/null || true
+    fi
+fi
+
+# =============================================================================
+# Step 14: Remote Access (SSH, mosh, tmux)
+# =============================================================================
+echo "[14/15] Installing remote access tools (SSH, mosh, tmux)..."
+sudo apt install -y openssh-server mosh tmux
+
+# Enable and start SSH server (requires systemd)
+if systemctl is-system-running &>/dev/null; then
+    sudo systemctl enable --now ssh
+    echo "SSH server enabled and started."
+else
+    echo "SSH server installed."
+    echo "NOTE: systemd not running. After WSL restart, run:"
+    echo "  sudo systemctl enable --now ssh"
+fi
+
+echo "Remote access tools installed:"
+echo "  - SSH: Connect via 'ssh user@<tailscale-ip>'"
+echo "  - mosh: Connect via 'mosh user@<tailscale-ip>'"
+echo "  - tmux: Persistent terminal sessions"
+
+# =============================================================================
+# Step 15: GitHub CLI (gh) + GitLab CLI (glab)
+# =============================================================================
+echo "[15/15] Installing GitHub CLI and GitLab CLI..."
 
 # GitHub CLI (gh)
-if ! command -v gh &> /dev/null; then
+if ! is_native_linux_command gh; then
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
     sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
@@ -294,11 +360,11 @@ if ! command -v gh &> /dev/null; then
     sudo apt install -y gh
     echo "GitHub CLI installed. Run 'gh auth login' to authenticate."
 else
-    echo "GitHub CLI already installed, skipping"
+    echo "GitHub CLI already installed (native Linux), skipping"
 fi
 
 # GitLab CLI (glab)
-if ! command -v glab &> /dev/null; then
+if ! is_native_linux_command glab; then
     # Get version from GitLab API (not GitHub)
     GLAB_VERSION=$(curl -s "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases" | grep -o '"tag_name":"v[^"]*"' | head -1 | cut -d'"' -f4 | sed 's/v//')
     if [ -n "$GLAB_VERSION" ]; then
@@ -311,7 +377,7 @@ if ! command -v glab &> /dev/null; then
         echo "Warning: Could not determine glab version, skipping installation"
     fi
 else
-    echo "GitLab CLI already installed, skipping"
+    echo "GitLab CLI already installed (native Linux), skipping"
 fi
 
 # =============================================================================
@@ -404,6 +470,8 @@ echo "  - kubectl, k3d, Helm, k9s"
 echo "  - uv (Python), fnm + bun (Node.js)"
 echo "  - Claude Code CLI (+ ccstatusline config)"
 echo "  - Git aliases and credential helper"
+echo "  - Tailscale (run 'sudo tailscale up' to connect)"
+echo "  - SSH server, mosh, tmux (remote access)"
 echo "  - GitHub CLI (gh) + GitLab CLI (glab)"
 echo ""
 echo "Next steps:"
