@@ -26,6 +26,14 @@
     "default_password": "password"
   },
 
+  "registry": {
+    "_comment": "Container image cache for k3d. mode: 'none' (no cache), 'local' (WSL containers), or 'remote' (network server)",
+    "mode": "none",
+    "host": "",
+    "docker_port": 5000,
+    "quay_port": 5001
+  },
+
   "options": {
     "install_node_lts": true,
     "create_k8s_cluster": false,

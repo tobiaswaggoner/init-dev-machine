@@ -351,11 +351,23 @@ if (-not $SkipClone) {
 
     Invoke-WslCommand -DistroName $distroName -User $defaultUser -Command "mkdir -p $configDir"
 
+    # Registry config (defaults if not specified)
+    $registryMode = if ($config.registry.mode) { $config.registry.mode } else { "local" }
+    $registryHost = if ($config.registry.host) { $config.registry.host } else { "localhost" }
+    $dockerPort = if ($config.registry.docker_port) { $config.registry.docker_port } else { 5000 }
+    $quayPort = if ($config.registry.quay_port) { $config.registry.quay_port } else { 5001 }
+
     # Write config file using heredoc to avoid escaping issues with spaces and quotes
     $configContent = @"
 DEV_NAME="$userName"
 DEV_EMAIL="$userEmail"
 GITHUB_USER="$githubUser"
+
+# Registry configuration (for k3d image caching)
+REGISTRY_MODE="$registryMode"
+REGISTRY_HOST="$registryHost"
+DOCKER_REGISTRY_PORT="$dockerPort"
+QUAY_REGISTRY_PORT="$quayPort"
 "@
     # Write via stdin to avoid shell escaping issues
     $configContent | wsl -d $distroName -u $defaultUser -- tee "$configDir/config" > $null

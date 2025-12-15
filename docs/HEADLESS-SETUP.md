@@ -123,6 +123,12 @@ claude
     "default_user": "tobias",
     "default_password": "password"
   },
+  "registry": {
+    "mode": "local",
+    "host": "",
+    "docker_port": 5000,
+    "quay_port": 5001
+  },
   "options": {
     "install_node_lts": true,
     "create_k8s_cluster": false,
@@ -144,6 +150,10 @@ claude
 | `wsl.tarball_path` | Path to Debian tarball for import |
 | `wsl.default_user` | Linux username to create |
 | `wsl.default_password` | Password for the Linux user (for sudo) |
+| `registry.mode` | `none` (no cache), `local` (WSL containers), or `remote` (network server) |
+| `registry.host` | IP/hostname for remote registry (empty for local) |
+| `registry.docker_port` | Port for docker.io cache (default: 5000) |
+| `registry.quay_port` | Port for quay.io cache (default: 5001) |
 
 ## Security
 
@@ -262,3 +272,49 @@ wsl -d Debian-Dev
 .\scripts\windows\remove-wsl.ps1 -ConfigFile .\config.json -Force
 .\scripts\windows\setup-wsl.ps1 -ConfigFile .\config.json
 ```
+
+## Network Registry (Optional)
+
+For faster WSL resets, run a pull-through cache registry on a network server. This caches Docker/Quay images and survives WSL instance destruction.
+
+### Server Setup (run once on your server)
+
+```bash
+# On your always-on Linux server
+mkdir -p /opt/registry-cache/{docker,quay}
+
+# docker.io cache (port 5000)
+docker run -d \
+  --name registry-docker \
+  --restart=always \
+  -p 5000:5000 \
+  -v /opt/registry-cache/docker:/var/lib/registry \
+  -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
+  registry:2
+
+# quay.io cache (port 5001)
+docker run -d \
+  --name registry-quay \
+  --restart=always \
+  -p 5001:5000 \
+  -v /opt/registry-cache/quay:/var/lib/registry \
+  -e REGISTRY_PROXY_REMOTEURL=https://quay.io \
+  registry:2
+```
+
+### Client Config
+
+In your `config.json`:
+
+```json
+{
+  "registry": {
+    "mode": "remote",
+    "host": "192.168.1.100",
+    "docker_port": 5000,
+    "quay_port": 5001
+  }
+}
+```
+
+After the first WSL setup, subsequent resets will pull images from your local cache instead of the internet.

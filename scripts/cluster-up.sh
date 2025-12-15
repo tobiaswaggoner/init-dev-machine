@@ -54,10 +54,18 @@ find_free_port() {
 # Main logic
 echo "Checking cluster status..."
 
+# Start pull-through cache registry (survives cluster resets)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/registry-up.sh"
+
+# Generate k3d config from template (applies registry settings)
+"$SCRIPT_DIR/generate-k3d-config.sh"
+
 # Setup volumes first
 mkdir -p "$HOME/k3d-vol/postgres-data"
 mkdir -p "$HOME/k3d-vol/mongodb-data"
 mkdir -p "$HOME/k3d-vol/redis-data"
+mkdir -p "$HOME/k3d-vol/registry"
 chmod 777 "$HOME/k3d-vol"/*-data 2>/dev/null || true
 echo "Volume directories ready"
 
@@ -112,6 +120,10 @@ if check_port $DEFAULT_PORT; then
         k3d cluster create --config "$TEMP_CONFIG"
         rm "$TEMP_CONFIG"
 
+        # Connect registry to k3d network
+        docker network connect "k3d-$CLUSTER_NAME" "k3d-registry.localhost" 2>/dev/null || true
+        echo "Registry connected to cluster network"
+
         echo ""
         echo "NOTE: Cluster is running on port $ALT_PORT (not $DEFAULT_PORT)"
         kubectl cluster-info
@@ -123,5 +135,10 @@ else
     # Port is free - create cluster normally
     echo "Creating cluster '$CLUSTER_NAME' on port $DEFAULT_PORT..."
     k3d cluster create --config "$CONFIG_FILE"
+
+    # Connect registry to k3d network
+    docker network connect "k3d-$CLUSTER_NAME" "k3d-registry.localhost" 2>/dev/null || true
+    echo "Registry connected to cluster network"
+
     kubectl cluster-info
 fi

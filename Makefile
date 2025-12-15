@@ -3,7 +3,7 @@
         postgres-up postgres-down mongodb-up mongodb-down redis-up redis-down \
         kafka-up kafka-down strimzi-up strimzi-down \
         port-forward-postgres port-forward-mongodb port-forward-redis \
-        setup-volumes
+        setup-volumes registry-up
 
 HELM := helm
 KUBECTL := kubectl
@@ -44,8 +44,12 @@ setup-volumes:
 	@mkdir -p $(HOME)/k3d-vol/postgres-data
 	@mkdir -p $(HOME)/k3d-vol/mongodb-data
 	@mkdir -p $(HOME)/k3d-vol/redis-data
+	@mkdir -p $(HOME)/k3d-vol/registry
 	@chmod 777 $(HOME)/k3d-vol/*-data
 	@echo "Volume directories created"
+
+registry-up:
+	@./scripts/registry-up.sh
 
 cluster-up:
 	@./scripts/cluster-up.sh
@@ -53,9 +57,13 @@ cluster-up:
 cluster-down:
 	$(K3D) cluster stop $(CLUSTER_NAME)
 
-cluster-reset: setup-volumes
+cluster-reset: setup-volumes registry-up
+	@./scripts/generate-k3d-config.sh
 	-$(K3D) cluster delete $(CLUSTER_NAME)
 	$(K3D) cluster create --config k8s/cluster/k3d-config.yaml
+	@docker network connect k3d-$(CLUSTER_NAME) k3d-registry.localhost 2>/dev/null || true
+	@docker network connect k3d-$(CLUSTER_NAME) k3d-registry-quay 2>/dev/null || true
+	@echo "Registries connected to cluster network"
 	@$(KUBECTL) cluster-info
 
 cluster-status:

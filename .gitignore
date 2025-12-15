@@ -24,3 +24,4 @@ secrets/
 
 # User config (contains personal details, secrets are in Credential Manager)
 config.json
+k8s/cluster/k3d-config.yaml

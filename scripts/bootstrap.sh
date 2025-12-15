@@ -410,7 +410,85 @@ echo "Creating volume directories..."
 mkdir -p ~/k3d-vol/postgres-data
 mkdir -p ~/k3d-vol/mongodb-data
 mkdir -p ~/k3d-vol/redis-data
+mkdir -p ~/k3d-vol/registry
+mkdir -p ~/k3d-vol/registry-quay
 chmod 777 ~/k3d-vol/*-data
+
+# =============================================================================
+# Registry Configuration (for k3d image caching)
+# =============================================================================
+echo ""
+echo "Configuring container registry cache..."
+
+# Check if already configured (from headless setup or previous run)
+if grep -q "REGISTRY_MODE" "$CONFIG_FILE" 2>/dev/null; then
+    source "$CONFIG_FILE"
+    echo "Registry already configured: ${REGISTRY_MODE} mode"
+    case "$REGISTRY_MODE" in
+        remote) echo "  Host: ${REGISTRY_HOST}:${DOCKER_REGISTRY_PORT}/${QUAY_REGISTRY_PORT}" ;;
+        local)  echo "  Local containers on ports ${DOCKER_REGISTRY_PORT}/${QUAY_REGISTRY_PORT}" ;;
+        none)   echo "  No caching (direct pull from internet)" ;;
+    esac
+else
+    # Only prompt interactively if stdin is a terminal
+    if [ -t 0 ]; then
+        echo ""
+        echo "Container registries cache images to speed up k3d cluster resets."
+        echo ""
+        echo "Options:"
+        echo "  1) None   - No cache, pull directly from internet (default)"
+        echo "  2) Local  - Run registry containers in this WSL instance"
+        echo "  3) Remote - Use existing registry server on your network"
+        echo ""
+        read -p "Select registry mode [1/2/3, default=1]: " REG_CHOICE
+
+        case $REG_CHOICE in
+            2)
+                REGISTRY_MODE="local"
+                REGISTRY_HOST="localhost"
+                DOCKER_REGISTRY_PORT="5000"
+                QUAY_REGISTRY_PORT="5001"
+                ;;
+            3)
+                REGISTRY_MODE="remote"
+                read -p "Registry server IP or hostname: " REGISTRY_HOST
+                read -p "docker.io port [5000]: " DOCKER_REGISTRY_PORT
+                read -p "quay.io port [5001]: " QUAY_REGISTRY_PORT
+                DOCKER_REGISTRY_PORT=${DOCKER_REGISTRY_PORT:-5000}
+                QUAY_REGISTRY_PORT=${QUAY_REGISTRY_PORT:-5001}
+                ;;
+            *)
+                REGISTRY_MODE="none"
+                REGISTRY_HOST=""
+                DOCKER_REGISTRY_PORT=""
+                QUAY_REGISTRY_PORT=""
+                ;;
+        esac
+
+        # Append to config file
+        cat >> "$CONFIG_FILE" << REGCONF
+
+# Registry configuration (for k3d image caching)
+REGISTRY_MODE="${REGISTRY_MODE}"
+REGISTRY_HOST="${REGISTRY_HOST}"
+DOCKER_REGISTRY_PORT="${DOCKER_REGISTRY_PORT}"
+QUAY_REGISTRY_PORT="${QUAY_REGISTRY_PORT}"
+REGCONF
+
+        echo "Registry configuration saved"
+    else
+        # Non-interactive: use defaults (none)
+        echo "Using default registry config (no cache)"
+        cat >> "$CONFIG_FILE" << REGCONF
+
+# Registry configuration (for k3d image caching)
+REGISTRY_MODE="none"
+REGISTRY_HOST=""
+DOCKER_REGISTRY_PORT=""
+QUAY_REGISTRY_PORT=""
+REGCONF
+    fi
+fi
 
 # =============================================================================
 # WSL-specific configuration
