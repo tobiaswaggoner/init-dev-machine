@@ -1,0 +1,25 @@
+# KafkaNodePool for Strimzi 0.46+ with KRaft
+# Combined controller and broker role for minimal single-node setup
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: dev-pool
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: dev-kafka
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: persistent-claim
+    size: 8Gi
+    deleteClaim: false
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 200m
+    limits:
+      memory: 1Gi
+      cpu: 500m

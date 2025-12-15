@@ -1,14 +1,18 @@
-# Kafka Cluster Custom Resource for Strimzi
-# Minimal single-node setup for local development
+# Kafka Cluster Custom Resource for Strimzi 0.46+
+# KRaft mode (no ZooKeeper), single-node setup for local development
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: dev-kafka
   namespace: kafka
+  annotations:
+    # Enable KRaft mode
+    strimzi.io/kraft: "enabled"
+    # Use KafkaNodePools for node configuration
+    strimzi.io/node-pools: "enabled"
 spec:
   kafka:
-    version: 3.7.0
-    replicas: 1
+    version: 4.0.0
     listeners:
       - name: plain
         port: 9092
@@ -27,27 +31,6 @@ spec:
       transaction.state.log.min.isr: 1
       default.replication.factor: 1
       min.insync.replicas: 1
-      inter.broker.protocol.version: "3.7"
-    storage:
-      type: ephemeral
-    resources:
-      requests:
-        memory: 512Mi
-        cpu: 200m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-  zookeeper:
-    replicas: 1
-    storage:
-      type: ephemeral
-    resources:
-      requests:
-        memory: 256Mi
-        cpu: 100m
-      limits:
-        memory: 512Mi
-        cpu: 300m
   entityOperator:
     topicOperator:
       resources:
