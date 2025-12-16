@@ -120,11 +120,11 @@ claude
     "distro_name": "Debian-Dev",
     "install_path": "%USERPROFILE%\\wsl\\debian-dev",
     "tarball_path": "%USERPROFILE%\\wsl\\installer\\debian.install.tar.gz",
-    "default_user": "tobias",
+    "default_user": "devuser",
     "default_password": "password"
   },
   "registry": {
-    "mode": "local",
+    "mode": "none",
     "host": "",
     "docker_port": 5000,
     "quay_port": 5001

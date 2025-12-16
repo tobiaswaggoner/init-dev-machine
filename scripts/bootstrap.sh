@@ -287,9 +287,48 @@ else
 fi
 
 # =============================================================================
-# Step 12: Git Configuration (aliases only - identity set after dotfiles)
+# Step 12: Claude Code MCP Server Templates
 # =============================================================================
-echo "[12/15] Configuring Git..."
+echo "[12/16] Setting up MCP server templates..."
+
+CLAUDE_TEMPLATES_DIR="$HOME/.claude/templates"
+mkdir -p "$CLAUDE_TEMPLATES_DIR"
+
+# Playwright MCP template (for browser automation)
+# Projects can copy this to their root as .mcp.json to enable
+if [ ! -f "$CLAUDE_TEMPLATES_DIR/mcp-playwright.json" ]; then
+    cat > "$CLAUDE_TEMPLATES_DIR/mcp-playwright.json" << 'MCPTEMPLATE'
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+MCPTEMPLATE
+    echo "Playwright MCP template created at $CLAUDE_TEMPLATES_DIR/mcp-playwright.json"
+    echo "  To enable in a project: cp ~/.claude/templates/mcp-playwright.json /path/to/project/.mcp.json"
+else
+    echo "MCP templates already exist, skipping"
+fi
+
+# Install Playwright browser (Chrome) for MCP server
+# This is required for the Playwright MCP server to work
+if ! command -v npx &> /dev/null; then
+    echo "npx not found, skipping Playwright browser installation"
+elif [ ! -d "$HOME/.cache/ms-playwright" ]; then
+    echo "Installing Playwright browser (Chrome)..."
+    npx playwright install chrome
+    echo "Playwright Chrome browser installed"
+else
+    echo "Playwright browsers already installed, skipping"
+fi
+
+# =============================================================================
+# Step 13: Git Configuration (aliases only - identity set after dotfiles)
+# =============================================================================
+echo "[13/16] Configuring Git..."
 
 # Delta diff viewer (optional, if installed)
 if command -v delta &> /dev/null; then
@@ -299,9 +338,9 @@ if command -v delta &> /dev/null; then
 fi
 
 # =============================================================================
-# Step 13: Tailscale
+# Step 14: Tailscale
 # =============================================================================
-echo "[13/15] Installing Tailscale..."
+echo "[14/16] Installing Tailscale..."
 if ! command -v tailscale &> /dev/null; then
     # Use official Tailscale installer (works on Debian/Ubuntu)
     curl -fsSL https://tailscale.com/install.sh | sh
@@ -326,9 +365,9 @@ else
 fi
 
 # =============================================================================
-# Step 14: Remote Access (SSH, mosh, tmux)
+# Step 15: Remote Access (SSH, mosh, tmux)
 # =============================================================================
-echo "[14/15] Installing remote access tools (SSH, mosh, tmux)..."
+echo "[15/16] Installing remote access tools (SSH, mosh, tmux)..."
 sudo apt install -y openssh-server mosh tmux
 
 # Enable and start SSH server (requires systemd)
@@ -347,9 +386,9 @@ echo "  - mosh: Connect via 'mosh user@<tailscale-ip>'"
 echo "  - tmux: Persistent terminal sessions"
 
 # =============================================================================
-# Step 15: GitHub CLI (gh) + GitLab CLI (glab)
+# Step 16: GitHub CLI (gh) + GitLab CLI (glab)
 # =============================================================================
-echo "[15/15] Installing GitHub CLI and GitLab CLI..."
+echo "[16/16] Installing GitHub CLI and GitLab CLI..."
 
 # GitHub CLI (gh)
 if ! is_native_linux_command gh; then
@@ -547,10 +586,16 @@ echo "  - Docker + Docker Compose"
 echo "  - kubectl, k3d, Helm, k9s"
 echo "  - uv (Python), fnm + bun (Node.js)"
 echo "  - Claude Code CLI (+ ccstatusline config)"
+echo "  - MCP server templates (playwright, etc.)"
 echo "  - Git aliases and credential helper"
 echo "  - Tailscale (run 'sudo tailscale up' to connect)"
 echo "  - SSH server, mosh, tmux (remote access)"
 echo "  - GitHub CLI (gh) + GitLab CLI (glab)"
+echo ""
+echo "MCP Server Templates:"
+echo "  Templates are in ~/.claude/templates/"
+echo "  To enable Playwright in a project:"
+echo "    cp ~/.claude/templates/mcp-playwright.json /path/to/project/.mcp.json"
 echo ""
 echo "Next steps:"
 echo "  1. Log out and back in (for docker group + zsh)"

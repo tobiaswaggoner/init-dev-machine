@@ -36,12 +36,8 @@ volumes:
       - server:0
 
 # k3s configuration
-options:
-  k3s:
-    extraArgs:
-      - arg: --disable=traefik
-        nodeFilters:
-          - server:*
+# Traefik is enabled by default (no --disable=traefik)
+# Access via http://localhost:8080
 
 # Registry configuration - pull-through cache for docker.io and quay.io
 # Generated from template - do not edit k3d-config.yaml directly

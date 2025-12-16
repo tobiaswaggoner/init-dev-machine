@@ -131,7 +131,8 @@ The ccstatusline is pre-configured in `~/.claude/settings.json`.
 
 ## Documentation
 
-- [New Machine Setup](docs/SETUP-NEW-MACHINE.md) - Complete setup from fresh Windows 11
+- [Headless Setup](docs/HEADLESS-SETUP.md) - Fully automated WSL setup (recommended)
+- [New Machine Setup](docs/SETUP-NEW-MACHINE.md) - Interactive setup from fresh Windows 11
 - [GitLab Setup](docs/GITLAB-SETUP.md) - Token creation, SSH keys
 - [Volumes](volumes/README.md) - Persistent storage details
 - [CLAUDE.md](CLAUDE.md) - LLM context for this repo

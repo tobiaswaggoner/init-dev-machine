@@ -64,7 +64,7 @@ Write-Host "━━━━━━━━━━━━━━━━━━━━━━�
 After restart, Debian launches automatically (or search "Debian" in Start menu):
 
 1. Wait for "Installing, this may take a few minutes..."
-2. **Create UNIX username**: Use your first name lowercase (e.g., `tobias`)
+2. **Create UNIX username**: Use your first name lowercase (e.g., `john`)
 3. **Create password**: Can be simple, you'll use it for `sudo`
 
 ### Verify Installation
@@ -129,8 +129,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo ""
     read -p "  Your full name (for Git): " DEV_NAME
     read -p "  Your email (for Git & SSH key): " DEV_EMAIL
-    read -p "  GitHub username [tobiaswaggoner]: " GITHUB_USER
-    GITHUB_USER=${GITHUB_USER:-tobiaswaggoner}
+    read -p "  GitHub username: " GITHUB_USER
+    GITHUB_USER=${GITHUB_USER:?GitHub username is required}
 
     mkdir -p "$CONFIG_DIR"
     cat > "$CONFIG_FILE" << CONF
@@ -413,7 +413,7 @@ Store code in Linux filesystem (`~/src/`), not `/mnt/c/`.
 # Customizing for Different Clients
 
 1. **Fork** this repo to a client-specific location
-2. **Modify** `k8s/helm/*/values.yaml` for client services
+2. **Modify** `k8s/manifests/*.yaml` for client services
 3. **Update** repo URL in this guide
 4. **Add** client-specific tools to `bootstrap.sh`
 
