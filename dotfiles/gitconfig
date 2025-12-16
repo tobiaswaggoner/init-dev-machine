@@ -28,6 +28,6 @@
     lg = log --oneline --graph --decorate
     last = log -1 HEAD
     unstage = reset HEAD --
-[user]
-	name = Tobias Waggoner
-	email = tobias.waggoner.ext@ane.energy
+# [user] section intentionally omitted - configure after setup:
+#   git config --global user.name "Your Name"
+#   git config --global user.email "your-email@example.com"
