@@ -53,7 +53,8 @@ infrastructure/
 │   └── install.sh           # Dotfiles installer
 ├── scripts/
 │   ├── bootstrap.sh         # Full WSL setup (15 steps)
-│   ├── cluster-up.sh        # Smart cluster creation (port conflict detection)
+│   ├── cluster-up.sh        # Smart cluster creation (+ Kafka recovery)
+│   ├── kafka-recover.sh     # Fix Kafka after WSL restart
 │   ├── install-helm.sh      # Helm-only installation
 │   └── windows/             # PowerShell scripts for WSL management
 │       ├── setup-wsl.ps1        # Headless WSL setup (main script)
@@ -102,6 +103,7 @@ make infra-status        # Show pod/service status
 # Individual services
 make postgres-up         # Deploy PostgreSQL
 make kafka-up            # Deploy Strimzi + Kafka
+make kafka-recover       # Fix Kafka after WSL restart
 ```
 
 ## Git Aliases (pre-configured)
@@ -135,3 +137,4 @@ These survive cluster resets.
 11. **WSL interop aware** - Bootstrap script ignores Windows binaries in `/mnt/c/` and installs native Linux versions
 12. **Headless setup available** - `setup-wsl.ps1` creates fully configured WSL instance from config file
 13. **Secrets in Credential Manager** - GitHub/GitLab tokens stored encrypted via Windows DPAPI
+14. **Kafka auto-recovery** - `cluster-up.sh` automatically fixes Kafka after WSL restart (KRaft cluster.id issue)

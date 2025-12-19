@@ -1,7 +1,7 @@
 .PHONY: help cluster-up cluster-down cluster-reset cluster-status \
         infra-up infra-down infra-status \
         postgres-up postgres-down mongodb-up mongodb-down redis-up redis-down \
-        kafka-up kafka-down strimzi-up strimzi-down \
+        kafka-up kafka-down kafka-recover strimzi-up strimzi-down \
         port-forward-postgres port-forward-mongodb port-forward-redis \
         setup-volumes registry-up
 
@@ -29,7 +29,8 @@ help:
 	@echo "  make postgres-up/down"
 	@echo "  make mongodb-up/down"
 	@echo "  make redis-up/down"
-	@echo "  make kafka-up/down   - Includes Strimzi operator"
+	@echo "  make kafka-up/down     - Includes Strimzi operator"
+	@echo "  make kafka-recover     - Fix Kafka after WSL restart"
 	@echo ""
 	@echo "Port Forwarding:"
 	@echo "  make port-forward-postgres  - Forward PostgreSQL (5432)"
@@ -141,6 +142,9 @@ kafka-down:
 	-$(KUBECTL) delete -f k8s/helm/strimzi/kafka-cluster.yaml
 	-$(KUBECTL) delete -f k8s/helm/strimzi/kafka-node-pool.yaml
 	@echo "Kafka cluster removed. Run 'make strimzi-down' to also remove the operator."
+
+kafka-recover:
+	@./scripts/kafka-recover.sh
 
 # =============================================================================
 # All Infrastructure
