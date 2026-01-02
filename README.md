@@ -1,6 +1,6 @@
-# Local Development Infrastructure
+# Infrastructure
 
-Local development infrastructure for WSL2/k3d environment.
+Infrastructure management for local development (WSL2/k3d) and cloud instances (Hetzner).
 
 ## Quick Start
 
@@ -129,10 +129,26 @@ claude
 
 The ccstatusline is pre-configured in `~/.claude/settings.json`.
 
+## Cloud Instances
+
+External servers managed via Tailscale mesh network.
+
+| Server | Provider | Purpose | Access |
+|--------|----------|---------|--------|
+| [hetzner-n8n](docs/cloud/HETZNER-N8N.md) | Hetzner | n8n Workflow Automation | https://n8n.internal.xr-ai.de |
+
+All cloud instances are accessible via Tailscale hostname (e.g., `ssh hetzner-n8n`).
+
 ## Documentation
 
+### Local Development
 - [Headless Setup](docs/HEADLESS-SETUP.md) - Fully automated WSL setup (recommended)
 - [New Machine Setup](docs/SETUP-NEW-MACHINE.md) - Interactive setup from fresh Windows 11
 - [GitLab Setup](docs/GITLAB-SETUP.md) - Token creation, SSH keys
 - [Volumes](volumes/README.md) - Persistent storage details
+
+### Cloud
+- [Hetzner n8n](docs/cloud/HETZNER-N8N.md) - n8n workflow automation server
+
+### Reference
 - [CLAUDE.md](CLAUDE.md) - LLM context for this repo

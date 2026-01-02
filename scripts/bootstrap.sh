@@ -337,32 +337,32 @@ if command -v delta &> /dev/null; then
     echo "Delta diff viewer configured"
 fi
 
-# =============================================================================
-# Step 14: Tailscale
-# =============================================================================
-echo "[14/16] Installing Tailscale..."
-if ! command -v tailscale &> /dev/null; then
-    # Use official Tailscale installer (works on Debian/Ubuntu)
-    curl -fsSL https://tailscale.com/install.sh | sh
+# # =============================================================================
+# # Step 14: Tailscale
+# # =============================================================================
+# echo "[14/16] Installing Tailscale..."
+# if ! command -v tailscale &> /dev/null; then
+#     # Use official Tailscale installer (works on Debian/Ubuntu)
+#     curl -fsSL https://tailscale.com/install.sh | sh
 
-    # Start tailscaled service (requires systemd)
-    if systemctl is-system-running &>/dev/null; then
-        sudo systemctl enable --now tailscaled
-        echo "Tailscale installed and tailscaled service started."
-        echo "NOTE: Run 'sudo tailscale up' to connect to your Tailnet."
-    else
-        echo "Tailscale installed."
-        echo "NOTE: systemd not running. After WSL restart, run:"
-        echo "  sudo systemctl enable --now tailscaled"
-        echo "  sudo tailscale up"
-    fi
-else
-    echo "Tailscale already installed, skipping"
-    # Ensure tailscaled is running
-    if systemctl is-system-running &>/dev/null; then
-        sudo systemctl enable --now tailscaled 2>/dev/null || true
-    fi
-fi
+#     # Start tailscaled service (requires systemd)
+#     if systemctl is-system-running &>/dev/null; then
+#         sudo systemctl enable --now tailscaled
+#         echo "Tailscale installed and tailscaled service started."
+#         echo "NOTE: Run 'sudo tailscale up' to connect to your Tailnet."
+#     else
+#         echo "Tailscale installed."
+#         echo "NOTE: systemd not running. After WSL restart, run:"
+#         echo "  sudo systemctl enable --now tailscaled"
+#         echo "  sudo tailscale up"
+#     fi
+# else
+#     echo "Tailscale already installed, skipping"
+#     # Ensure tailscaled is running
+#     if systemctl is-system-running &>/dev/null; then
+#         sudo systemctl enable --now tailscaled 2>/dev/null || true
+#     fi
+# fi
 
 # =============================================================================
 # Step 15: Remote Access (SSH, mosh, tmux)

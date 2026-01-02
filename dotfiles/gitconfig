@@ -31,3 +31,6 @@
 # [user] section intentionally omitted - configure after setup:
 #   git config --global user.name "Your Name"
 #   git config --global user.email "your-email@example.com"
+[user]
+	name = Tobias Waggoner
+	email = tobias.waggoner@gmail.com

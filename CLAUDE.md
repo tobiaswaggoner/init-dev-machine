@@ -1,11 +1,12 @@
 # Infrastructure Repo - LLM Context
 
 ## Overview
-This repository manages local development infrastructure. It provides:
+This repository manages local development infrastructure and cloud instances. It provides:
 - **Headless WSL setup** - Fully automated dev environment creation from config file
 - Local Kubernetes cluster (k3d) configuration
 - Infrastructure services (PostgreSQL, MongoDB, Redis, Kafka)
 - WSL development environment setup (dotfiles, tools, Claude Code)
+- **Cloud instance management** - Hetzner servers via Tailscale mesh network
 
 ## Environment
 - **OS**: Windows 11 + WSL2 (Debian)
@@ -64,6 +65,8 @@ infrastructure/
 ├── volumes/
 │   └── README.md            # Volume documentation
 └── docs/
+    ├── cloud/               # Cloud instance documentation
+    │   └── HETZNER-N8N.md   # n8n server on Hetzner
     ├── HEADLESS-SETUP.md    # Automated setup guide
     ├── GITLAB-SETUP.md      # Git/GitLab configuration
     └── SETUP-NEW-MACHINE.md # Manual setup guide (interactive)
@@ -121,7 +124,33 @@ Services requiring persistence mount host directories:
 
 These survive cluster resets.
 
+## Cloud Instances
+
+External servers accessible via Tailscale mesh network.
+
+| Server | Tailscale Host | Provider | Purpose | URL |
+|--------|----------------|----------|---------|-----|
+| hetzner-n8n | `hetzner-n8n` | Hetzner Cloud | n8n Workflow Automation | https://n8n.internal.xr-ai.de |
+
+### hetzner-n8n Details
+- **OS**: Debian 13 (trixie)
+- **Specs**: 2 vCPU, 4GB RAM, 40GB system + 10GB data disk
+- **Public IP**: 88.198.224.219
+- **Tailscale IP**: 100.81.212.93
+- **Services**: n8n (Docker), Caddy (reverse proxy), Tailscale
+- **Data**: `/mnt/data/n8n/` (external volume)
+- **TLS**: Let's Encrypt via Caddy (auto-renewal)
+- **Docs**: [docs/cloud/HETZNER-N8N.md](docs/cloud/HETZNER-N8N.md)
+
+### SSH Access
+```bash
+ssh hetzner-n8n              # via Tailscale (preferred)
+ssh root@88.198.224.219      # via public IP
+```
+
 ## Important Notes for LLMs
+
+### Local Development (k3d)
 1. **Cluster can be reset anytime** - design for stateless deployments
 2. **Host volumes persist** - data survives cluster deletion
 3. **Official Docker images** for PostgreSQL, MongoDB, Redis - see k8s/manifests/
@@ -135,3 +164,9 @@ These survive cluster resets.
 11. **WSL interop aware** - Bootstrap script ignores Windows binaries in `/mnt/c/` and installs native Linux versions
 12. **Headless setup available** - `setup-wsl.ps1` creates fully configured WSL instance from config file
 13. **Secrets in Credential Manager** - GitHub/GitLab tokens stored encrypted via Windows DPAPI
+
+### Cloud Instances
+14. **All cloud servers use Tailscale** - accessible via hostname from any Tailscale-connected device
+15. **SSH config** - Cloud servers should be added to `~/.ssh/config` with Tailscale hostnames
+16. **hetzner-n8n** - n8n data on external volume at `/mnt/data/`, TLS via Let's Encrypt, Caddy as reverse proxy
+17. **Hetzner Firewall** - Remember to check both UFW and Hetzner Cloud Firewall for port access
