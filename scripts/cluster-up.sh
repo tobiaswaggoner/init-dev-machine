@@ -51,6 +51,14 @@ find_free_port() {
     echo $port
 }
 
+# Run Kafka recovery if needed (after WSL restart, Kafka may have stale state)
+run_kafka_recovery() {
+    if [[ -x "$SCRIPT_DIR/kafka-recover.sh" ]]; then
+        echo ""
+        "$SCRIPT_DIR/kafka-recover.sh" || true
+    fi
+}
+
 # Main logic
 echo "Checking cluster status..."
 
@@ -77,11 +85,13 @@ if cluster_exists; then
     if docker ps --format '{{.Names}}' | grep -q "k3d-$CLUSTER_NAME"; then
         echo "Cluster is running"
         kubectl cluster-info
+        run_kafka_recovery
         exit 0
     else
         echo "Cluster exists but not running, starting..."
         k3d cluster start "$CLUSTER_NAME"
         kubectl cluster-info
+        run_kafka_recovery
         exit 0
     fi
 fi

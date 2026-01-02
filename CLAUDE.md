@@ -54,7 +54,8 @@ infrastructure/
 │   └── install.sh           # Dotfiles installer
 ├── scripts/
 │   ├── bootstrap.sh         # Full WSL setup (15 steps)
-│   ├── cluster-up.sh        # Smart cluster creation (port conflict detection)
+│   ├── cluster-up.sh        # Smart cluster creation (+ Kafka recovery)
+│   ├── kafka-recover.sh     # Fix Kafka after WSL restart
 │   ├── install-helm.sh      # Helm-only installation
 │   └── windows/             # PowerShell scripts for WSL management
 │       ├── setup-wsl.ps1        # Headless WSL setup (main script)
@@ -105,6 +106,7 @@ make infra-status        # Show pod/service status
 # Individual services
 make postgres-up         # Deploy PostgreSQL
 make kafka-up            # Deploy Strimzi + Kafka
+make kafka-recover       # Fix Kafka after WSL restart
 ```
 
 ## Git Aliases (pre-configured)
@@ -164,9 +166,10 @@ ssh root@88.198.224.219      # via public IP
 11. **WSL interop aware** - Bootstrap script ignores Windows binaries in `/mnt/c/` and installs native Linux versions
 12. **Headless setup available** - `setup-wsl.ps1` creates fully configured WSL instance from config file
 13. **Secrets in Credential Manager** - GitHub/GitLab tokens stored encrypted via Windows DPAPI
+14. **Kafka auto-recovery** - `cluster-up.sh` automatically fixes Kafka after WSL restart (KRaft cluster.id issue)
 
 ### Cloud Instances
-14. **All cloud servers use Tailscale** - accessible via hostname from any Tailscale-connected device
-15. **SSH config** - Cloud servers should be added to `~/.ssh/config` with Tailscale hostnames
-16. **hetzner-n8n** - n8n data on external volume at `/mnt/data/`, TLS via Let's Encrypt, Caddy as reverse proxy
-17. **Hetzner Firewall** - Remember to check both UFW and Hetzner Cloud Firewall for port access
+15. **All cloud servers use Tailscale** - accessible via hostname from any Tailscale-connected device
+16. **SSH config** - Cloud servers should be added to `~/.ssh/config` with Tailscale hostnames
+17. **hetzner-n8n** - n8n data on external volume at `/mnt/data/`, TLS via Let's Encrypt, Caddy as reverse proxy
+18. **Hetzner Firewall** - Remember to check both UFW and Hetzner Cloud Firewall for port access
